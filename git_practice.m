@@ -7,4 +7,5 @@
 % After committing, they should push the commit to the remote repository on
 % GitHub
 
-fprint('My name is Michael')
+fprintf('My name is Michael')
+fprintf('My name is Charles')
