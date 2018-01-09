@@ -1,0 +1,59 @@
+/*******************
+For use with ClosedCube Si7051 breakout board
+
+Photon-------Si7051(board):
+3v3--------VDD
+D1--------SCL (10k pull-up resistor to VDD included on board)
+D0--------SDA (10k pull-up resistor to VDD included on board)
+GND--------GND
+******************/
+
+
+#include "math.h"
+#include "application.h"
+
+
+
+void setup() {
+    Wire.begin();
+
+	Wire.beginTransmission(0x40);
+	Wire.write(0xE6);
+	Wire.write(0x0);
+	Wire.endTransmission();
+
+	Serial.begin(9600);
+	Serial.println("ClosedCube Si7051 Arduino Test");
+}
+
+void loop() {
+    Wire.beginTransmission(0x40);
+	Wire.write(0xF3); //calling for Si7051 to make a temperature measurement
+	//Wire.write(0x40); extra writes not needed - were included in original Arduino sketch but cause issues in Particle
+	//Wire.write(0x40);
+	//Wire.write(0x40);
+	Wire.endTransmission();
+
+	delay(15); //14 bit temperature conversion needs 10+ms time to complete.
+
+	Wire.requestFrom(0x40, (uint8_t)2);
+    delay(25);
+	byte msb = Wire.read();
+	byte lsb = Wire.read();
+
+	uint16_t val = msb << 8 | lsb;
+
+	float temperature = (175.72*val) / 65536 - 46.85;
+	Serial.print("msb= ");
+    Serial.println(msb);
+    Serial.print("lsb= ");
+    Serial.println(lsb);
+    Serial.print("val=");
+    Serial.println(val);
+    Serial.print("T=");
+    Serial.print(temperature);
+    Serial.println("C");
+
+    delay(2000);
+
+}
