@@ -1,4 +1,3 @@
-// This #include statement was automatically added by the Particle IDE.
 #include "PM.h"
 
 /*
@@ -38,5 +37,6 @@ void setup() {
 void loop() {
     digitalWrite(pm_transistor_control, HIGH);
     myPM.run_PM_sensor();
+    delay(1000);
 }
 

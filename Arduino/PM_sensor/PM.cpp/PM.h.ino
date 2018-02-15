@@ -16,17 +16,14 @@ class PM_7003 {
   public:
     PM_7003();
     virtual ~PM_7003();
-    int pm_reading_index;
     float get_pm_average(void);
     void run_PM_sensor(void);
     
   private:
-    float pm_average;
     int current_byte;
     bool sync_state;
     char print_buffer[256];
     uint16_t byte_sum;
-    float pm_buffer[101];
     int drain;
     uint16_t current_data;
     
@@ -34,12 +31,10 @@ class PM_7003 {
     int frame_count;
     int frame_length;
     
-    void read_dust_value(void);
-    void find_pm_average(void);
     void drain_serial(void);
     void frame_sync(void);
     void read_sensor(void);
-    void data_switch(void);
+    void data_switch(uint16_t current_data);
     void print_messages(void);
 
     struct PMS7003data {

@@ -1,8 +1,6 @@
 #include "PM.h"
 
 PM_7003::PM_7003() {
-  pm_reading_index = 0;
-  pm_average = 0;
   current_byte = 0;
   packetdata.frame_length = MAX_FRAME_LENGTH;
   frame_length = MAX_FRAME_LENGTH;
@@ -13,32 +11,13 @@ PM_7003::~PM_7003() {
 }
 
 void PM_7003::run_PM_sensor(void) {
-    if(pm_reading_index<100) {
-      read_dust_value();
-      pm_reading_index++;
-    }
-    else {
-      find_pm_average();
-      Serial.print(pm_average);
-      pm_reading_index = 0;
-      delay(DELAY_TIME);
-      read_sensor();
-    }
+    Serial1.begin(9600);
+    drain_serial();
+    delay(1000);
+    // delay(DELAY_TIME);
+    read_sensor();
+    Serial1.end();
 }
-
-void PM_7003::read_dust_value(void) {
-    delayMicroseconds(SAMPLING_TIME);
-    pm_buffer[pm_reading_index] = analogRead(SENSOR_OUTPUT_PIN);
-    delayMicroseconds(SLEEP_TIME);
-}
-
-void PM_7003::find_pm_average(void) {
-    pm_average = 0;
-    for(int j = 0; j < 101; j++) {pm_average += pm_buffer[j];}
-    pm_average = pm_average / 100;
-}
-
-float PM_7003::get_pm_average(void) {return(pm_average);}
 
 void PM_7003::drain_serial(void) {
   /*
@@ -47,7 +26,7 @@ void PM_7003::drain_serial(void) {
    */
   if (Serial1.available() > 32) {
     drain = Serial1.available();
-    Serial.print("-- Draining buffer: ");
+    Serial.println("-- Draining buffer: ");
     Serial.println(Serial1.available(), DEC);
     for (int drain_index = drain; drain_index > 0; drain_index--) {Serial1.read();}
   }
@@ -59,12 +38,11 @@ void PM_7003::frame_sync(void) {
    * checks that frames are being read in correct order
    * exits when it confirms that frames are being read correctly
   */
-  
-  sync_state = false;
-  frame_count = 0;
-  byte_sum = 0;
-  
-  while (!sync_state && Serial1.available() > 0){
+    sync_state = false;
+    frame_count = 0;
+    byte_sum = 0;
+
+    while (!sync_state && Serial1.available() > 0){
       current_byte = Serial1.read();
     
       if(current_byte == FIRST_BYTE && frame_count == 0) {
@@ -80,31 +58,33 @@ void PM_7003::frame_sync(void) {
         frame_count = 2;
         sync_state = true;
       }
-      else{Serial.print("frame is syncing");}
+      else{Serial.println("frame is syncing");}
   }
 }
 
 void PM_7003::read_sensor(void) {
   frame_sync();
-  
-  if(sync_state == true && Serial1.available() > 0) {
-    frame_buffer[frame_count]= current_byte;
+
+  while(sync_state == true && Serial1.available() > 0) {
+    current_byte = Serial1.read();
+    frame_buffer[frame_count] = current_byte;
     byte_sum = byte_sum + current_byte;
     frame_count++;
     uint16_t current_data = frame_buffer[frame_count-1]+(frame_buffer[frame_count-2]<<8);
-    data_switch();
-
+    data_switch(current_data);
+    
     if (frame_count >= frame_length) {
       print_messages();
+      break;
     }
   }    
 }
 
-void PM_7003::data_switch(void) {
+void PM_7003::data_switch(uint16_t current_data) {
     switch (frame_count) {
     case 4:  
-      packetdata.frame_length = current_data;
-      frame_length = current_data + frame_count;
+        packetdata.frame_length = current_data;
+        frame_length = current_data + frame_count;
       break;
     case 6:
       packetdata.concPM1_0_factory = current_data;
@@ -160,6 +140,7 @@ void PM_7003::data_switch(void) {
 }
 
 void PM_7003::print_messages(void){
+    Serial.println("Print Messages");
     sprintf(print_buffer, ", %02x, %02x, %04x, ",
         packetdata.start_frame[0], packetdata.start_frame[1], packetdata.frame_length);
     sprintf(print_buffer, "%s%04d, %04d, %04d, ", print_buffer,
@@ -171,6 +152,6 @@ void PM_7003::print_messages(void){
         packetdata.countPM2_5um, packetdata.countPM5_0um, packetdata.countPM10_0um);
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
-    Serial.print(print_buffer);
+    Serial.println(print_buffer);
 }
 
