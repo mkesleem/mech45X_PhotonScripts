@@ -31,7 +31,7 @@ class MHZ19 {
         int mhz19_ppm;
         
         void frame_sync(void);
-        void read_data(void);
+        void read_sensor(void);
         void serial_drain(void);
         void fill_buffer(void);
 };

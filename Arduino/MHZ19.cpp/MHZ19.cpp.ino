@@ -20,7 +20,9 @@ int MHZ19::getCO2(void) {
 }
 
 void MHZ19::run_MHZ19(void) {
-    read_data();
+    mhz19_ppm = 0;
+    memset(frame_buffer, 0, 9);
+    read_sensor();
     
     if(mhz19_ppm > 0) {
       Serial.print("MHZ19 CO2 PPM: ");
@@ -29,13 +31,14 @@ void MHZ19::run_MHZ19(void) {
     else {
       Serial.println("Error reading CO2 PPM from MHZ19");
     }
+    delay(1000);
 }
 
-void MHZ19::read_data(void) {
+void MHZ19::read_sensor(void) {
     Serial1.begin(9600);
     Serial1.write(mhz19_read_command, 9);
     serial_drain();
-    frame_sync();
+    delay(1000);
     fill_buffer();
     mhz19_ppm = 256*frame_buffer[2] + frame_buffer[3];
     Serial1.end();
@@ -55,6 +58,7 @@ void MHZ19::serial_drain(void) {
 void MHZ19::frame_sync(void) {
     sync_state = false;
     frame_count = 0;
+    byte_sum = 0;
     
     while (!sync_state && Serial1.available() > 0) {
         current_byte = Serial1.read();
@@ -62,23 +66,27 @@ void MHZ19::frame_sync(void) {
         if (current_byte == MHZ19_ZEROTH_BYTE && frame_count == 0) {
             frame_buffer[frame_count] = current_byte;
             byte_sum = current_byte;
-            frame_count++;
+            frame_count = 1;
         }
         else if (current_byte == MHZ19_FIRST_BYTE && frame_count == 1) {
             frame_buffer[frame_count] = current_byte;
             byte_sum += current_byte;
             sync_state = true;
-            frame_count++;
+            frame_count = 2;
         }
         else {
             Serial.print("-- Frame syncing... ");
             Serial.println(current_byte, HEX);
+            Serial.println(Serial1.available());
         }
     }
 }
 
 void MHZ19::fill_buffer(void) {
-  while(Serial1.available() > 0 && frame_count < 9) {
+  frame_sync();
+  
+  while(sync_state && Serial1.available() > 0 && frame_count < MAX_FRAME_LEN) {
+    current_byte = Serial1.read();
     frame_buffer[frame_count] = current_byte;
     byte_sum += current_byte;
     frame_count++;
