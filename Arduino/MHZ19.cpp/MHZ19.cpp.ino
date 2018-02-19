@@ -9,6 +9,8 @@
 
 MHZ19::MHZ19() {
   mhz19_ppm = 0;
+  reading_count = 1;
+  is_average_taken = false;
 }
 
 MHZ19::~MHZ19() {
@@ -23,15 +25,51 @@ void MHZ19::run_MHZ19(void) {
     mhz19_ppm = 0;
     memset(frame_buffer, 0, 9);
     read_sensor();
-    
+    print_current_reading();
+    take_average();
+    print_average_reading();
+    delay(1000);
+}
+
+void MHZ19::print_current_reading(void) {
     if(mhz19_ppm > 0) {
-      Serial.print("MHZ19 CO2 PPM: ");
+      Serial.print("MHZ19 CO2 PPM Reading ");
+      Serial.print(reading_count);
+      Serial.print(": ");
       Serial.println(mhz19_ppm);
     }
     else {
       Serial.println("Error reading CO2 PPM from MHZ19");
     }
-    delay(1000);
+}
+
+void MHZ19::take_average(void) {
+    if(mhz19_ppm > 0 && reading_count <= NUMBER_OF_VALUES) {
+        mhz19_buffer[reading_count - 1] = mhz19_ppm;
+        reading_count += 1;
+    }
+}
+
+void MHZ19::print_average_reading(void) {
+    if(reading_count > NUMBER_OF_VALUES) {
+      mhz19_ppm_average = 0;
+      for(int k = 0; k < NUMBER_OF_VALUES; k++) {mhz19_ppm_average += mhz19_buffer[k];}
+      mhz19_ppm_average = mhz19_ppm_average / NUMBER_OF_VALUES;
+      Serial.print("MHZ19 CO2 PPM Average Reading: ");
+      Serial.println(mhz19_ppm_average);
+      reading_count = 1;
+      is_average_taken = true;
+    }
+}
+
+bool MHZ19::transistor_on_off(void) {
+    if(is_average_taken == true) {
+        is_average_taken = false;
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 void MHZ19::read_sensor(void) {
