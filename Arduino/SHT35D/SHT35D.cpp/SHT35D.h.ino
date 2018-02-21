@@ -1,5 +1,6 @@
 #ifndef SHT35D
 #define SHT35D
+#define MAX_READ_COUNT 5
 
 #include <Arduino.h>
 
@@ -117,10 +118,18 @@ struct SHT31D {
   SHT31D_ErrorCode error;
 };
 
+struct SHT_read_tracker {
+    int read_count;
+  bool done_reading;
+};
+
 class ClosedCube_SHT31D {
 
 public:
   ClosedCube_SHT31D();
+
+    bool check_done_reading(void);
+    SHT31D initilze_values(void);
 
   SHT31D_ErrorCode begin(uint8_t address);
   SHT31D_ErrorCode clearAll();
@@ -136,6 +145,7 @@ public:
 
   uint32_t readSerialNumber();
 
+    SHT31D printResult(String text, SHT31D result);
   SHT31D readTempAndHumidity(SHT31D_Repeatability repeatability, SHT31D_Mode mode, uint8_t timeout);
   SHT31D readTempAndHumidityClockStretch(SHT31D_Repeatability repeatability);
   SHT31D readTempAndHumidityPolling(SHT31D_Repeatability repeatability, uint8_t timeout);
@@ -151,6 +161,11 @@ public:
   SHT31D_ErrorCode writeAlertLow(float temperatureClear, float temperatureSet, float humidityClear, float humiditySet);
   SHT31D readAlertLowSet();
   SHT31D readAlertLowClear();
+  
+  struct SHT_read_tracker {
+        int read_count;
+      bool done_reading;
+    } read_tracker;
 
 private:
   uint8_t _address;
@@ -173,6 +188,7 @@ private:
   SHT31D_ErrorCode read(uint16_t* data, uint8_t numOfPair);
 
   SHT31D returnError(SHT31D_ErrorCode command);
+  
 };
 
 #endif

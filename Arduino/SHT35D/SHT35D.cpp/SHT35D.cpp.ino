@@ -110,6 +110,37 @@ SHT31D_ErrorCode ClosedCube_SHT31D::periodicStart(SHT31D_Repeatability repeatabi
   return error;
 }
 
+SHT31D ClosedCube_SHT31D::initilze_values(void) {
+    read_tracker.read_count = 1;
+    read_tracker.done_reading = false;
+}
+
+SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
+  if (result.error == SHT3XD_NO_ERROR && read_tracker.read_count <= MAX_READ_COUNT) {
+    Serial.print(text);
+    Serial.print(": T=");
+    Serial.print(result.t);
+    Serial.print("C, RH=");
+    Serial.print(result.rh);
+    Serial.println("%");
+    read_tracker.read_count += 1;
+  } else if (result.error != SHT3XD_NO_ERROR) {
+    Serial.print(text);
+    Serial.print(": [ERROR] Code #");
+    Serial.println(result.error);
+  } else {
+      read_tracker.done_reading = true;
+      read_tracker.read_count = 1;
+  }
+}
+
+bool ClosedCube_SHT31D::check_done_reading(void) {
+    if(read_tracker.done_reading == true) {
+        read_tracker.done_reading = false;
+        return true;
+    } else {return false;}
+}
+
 SHT31D ClosedCube_SHT31D::readTempAndHumidity(SHT31D_Repeatability repeatability, SHT31D_Mode mode, uint8_t timeout)
 {
   SHT31D result;
