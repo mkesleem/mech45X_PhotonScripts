@@ -15,11 +15,7 @@ bool PM_7003::run_PM_sensor(void) {
     read_count = 1;
     done_reading = false;
     frame_sync_count = 0;
-    
-    Serial.println("----------------------");
-    Serial.println("Reading from PM sensor");
-    Serial.println("----------------------");
-    
+
     while(!done_reading && frame_sync_count < MAX_FRAME_SYNC_COUNT) {
         drain_serial();
         delay(500);
@@ -32,6 +28,7 @@ bool PM_7003::run_PM_sensor(void) {
         Serial.println("---------------------------");
         Serial.println("Done reading from PM sensor");
         Serial.println("---------------------------");
+        Serial.println(" ");
         return true;
     }
     else if(!done_reading && frame_sync_count >= MAX_FRAME_SYNC_COUNT){return false;}
