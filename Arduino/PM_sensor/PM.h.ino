@@ -10,13 +10,12 @@
 #define START_TIME 6000
 #define SAMPLING_TIME 280
 #define SLEEP_TIME 912
-#define DELAY_TIME 10000
+#define MAX_READ_COUNT 5
 
 class PM_7003 {
   public:
     PM_7003();
     virtual ~PM_7003();
-    float get_pm_average(void);
     void run_PM_sensor(void);
     
   private:
@@ -26,6 +25,9 @@ class PM_7003 {
     uint16_t byte_sum;
     int drain;
     uint16_t current_data;
+
+    bool done_reading;
+    int read_count;
     
     char frame_buffer[MAX_FRAME_LENGTH];
     int frame_count;

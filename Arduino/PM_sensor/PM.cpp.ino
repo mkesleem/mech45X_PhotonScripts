@@ -12,10 +12,25 @@ PM_7003::~PM_7003() {
 
 void PM_7003::run_PM_sensor(void) {
     Serial1.begin(9600);
-    drain_serial();
-    delay(1000);
-    // delay(DELAY_TIME);
-    read_sensor();
+    read_count = 1;
+    done_reading = false;
+    
+    Serial.println("----------------------");
+    Serial.println("Reading from PM sensor");
+    Serial.println("----------------------");
+    
+    while(!done_reading) {
+        drain_serial();
+        delay(500);
+        read_sensor();
+    }
+    
+    if(done_reading) {
+        Serial.println("---------------------------");
+        Serial.println("Done reading from PM sensor");
+        Serial.println("---------------------------");
+    }
+    
     Serial1.end();
 }
 
@@ -42,7 +57,7 @@ void PM_7003::frame_sync(void) {
     frame_count = 0;
     byte_sum = 0;
 
-    while (!sync_state && Serial1.available() > 0){
+    while (!sync_state){
       current_byte = Serial1.read();
     
       if(current_byte == FIRST_BYTE && frame_count == 0) {
@@ -58,7 +73,12 @@ void PM_7003::frame_sync(void) {
         frame_count = 2;
         sync_state = true;
       }
-      else{Serial.println("frame is syncing");}
+      else{
+          Serial.println("frame is syncing");
+          Serial.print("Current character: ");
+          Serial.println(current_byte, HEX);
+          delay(1000);
+      }
   }
 }
 
@@ -73,11 +93,15 @@ void PM_7003::read_sensor(void) {
     uint16_t current_data = frame_buffer[frame_count-1]+(frame_buffer[frame_count-2]<<8);
     data_switch(current_data);
     
-    if (frame_count >= frame_length) {
+    if (frame_count >= frame_length && read_count <= MAX_READ_COUNT) {
       print_messages();
+      read_count++;
       break;
     }
-  }    
+  }
+  if (read_count > MAX_READ_COUNT) {
+      done_reading = true;
+  }
 }
 
 void PM_7003::data_switch(uint16_t current_data) {
@@ -140,7 +164,10 @@ void PM_7003::data_switch(uint16_t current_data) {
 }
 
 void PM_7003::print_messages(void){
-    Serial.println("Print Messages");
+    Serial.println("-----------------------");
+    Serial.print("PMS 7003 - Reading #");
+    Serial.println(read_count);
+    Serial.println("-----------------------");
     sprintf(print_buffer, ", %02x, %02x, %04x, ",
         packetdata.start_frame[0], packetdata.start_frame[1], packetdata.frame_length);
     sprintf(print_buffer, "%s%04d, %04d, %04d, ", print_buffer,
@@ -153,5 +180,7 @@ void PM_7003::print_messages(void){
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
     Serial.println(print_buffer);
+    Serial.println("-----------------------");
+    delay(500);
 }
 
