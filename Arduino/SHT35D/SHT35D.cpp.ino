@@ -470,7 +470,7 @@ SHT31D ClosedCube_SHT31D::returnError(SHT31D_ErrorCode error) {
 }
 
 /**********************************************************************************/
-bool ClosedCube_SHT31D::start_SHT(void) {
+bool ClosedCube_SHT31D::start_sht(void) {
     begin(ADDR_SHT); // I2C address: 0x44 or 0x45
     Serial.print("Serial #");
     Serial.println(readSerialNumber());
@@ -481,3 +481,10 @@ bool ClosedCube_SHT31D::start_SHT(void) {
     }
     else {return true;}
 }
+
+SHT31D ClosedCube_SHT31D::run_sht(void) {
+    SHT31D my_result = periodicFetchData();
+    printResult("Periodic Mode", my_result);
+    delay(250);
+}
+

@@ -124,7 +124,8 @@ class ClosedCube_SHT31D {
 public:
     ClosedCube_SHT31D();
 
-    bool start_SHT(void);
+    bool start_sht(void);
+    SHT31D run_sht(void);
 
     SHT31D_ErrorCode begin(uint8_t address);
     SHT31D_ErrorCode clearAll();
