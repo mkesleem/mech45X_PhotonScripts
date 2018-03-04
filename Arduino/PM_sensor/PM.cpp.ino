@@ -10,28 +10,31 @@ PM_7003::~PM_7003() {
   // TODO Auto-generated destructor stub
 }
 
-void PM_7003::run_PM_sensor(void) {
+bool PM_7003::run_PM_sensor(void) {
     Serial1.begin(9600);
     read_count = 1;
     done_reading = false;
+    frame_sync_count = 0;
     
     Serial.println("----------------------");
     Serial.println("Reading from PM sensor");
     Serial.println("----------------------");
     
-    while(!done_reading) {
+    while(!done_reading && frame_sync_count < MAX_FRAME_SYNC_COUNT) {
         drain_serial();
         delay(500);
         read_sensor();
     }
     
+    Serial1.end();
+    
     if(done_reading) {
         Serial.println("---------------------------");
         Serial.println("Done reading from PM sensor");
         Serial.println("---------------------------");
+        return true;
     }
-    
-    Serial1.end();
+    else if(!done_reading && frame_sync_count >= MAX_FRAME_SYNC_COUNT){return false;}
 }
 
 void PM_7003::drain_serial(void) {
@@ -56,30 +59,40 @@ void PM_7003::frame_sync(void) {
     sync_state = false;
     frame_count = 0;
     byte_sum = 0;
-
-    while (!sync_state){
-      current_byte = Serial1.read();
     
-      if(current_byte == FIRST_BYTE && frame_count == 0) {
-        frame_buffer[frame_count] = current_byte;
-        packetdata.start_frame[0] = current_byte;
-        byte_sum = current_byte;
-        frame_count = 1;
-      }
-      else if(current_byte == SECOND_BYTE && frame_count == 1){
-        frame_buffer[frame_count] = current_byte;
-        packetdata.start_frame[1] = current_byte;
-        byte_sum = byte_sum + current_byte;
-        frame_count = 2;
-        sync_state = true;
-      }
-      else{
-          Serial.println("frame is syncing");
-          Serial.print("Current character: ");
-          Serial.println(current_byte, HEX);
-          delay(1000);
-      }
-  }
+    while (!sync_state && frame_sync_count < MAX_FRAME_SYNC_COUNT){
+        current_byte = Serial1.read();
+    
+        if(current_byte == FIRST_BYTE && frame_count == 0) {
+            frame_buffer[frame_count] = current_byte;
+            packetdata.start_frame[0] = current_byte;
+            byte_sum = current_byte;
+            frame_count = 1;
+        }
+        else if(current_byte == SECOND_BYTE && frame_count == 1){
+            frame_buffer[frame_count] = current_byte;
+            packetdata.start_frame[1] = current_byte;
+            byte_sum = byte_sum + current_byte;
+            frame_count = 2;
+            sync_state = true;
+        }
+        else{
+            frame_sync_count++;
+            Serial.println("frame is syncing");
+            Serial.print("Current character: ");
+            Serial.println(current_byte, HEX);
+            Serial.print("frame count: ");
+            Serial.println(frame_sync_count);
+            delay(500);
+            
+            if(frame_sync_count >= MAX_FRAME_SYNC_COUNT) {
+                Serial.println("------------------------");
+                Serial.println("Max frame count exceeded");
+                Serial.println("------------------------");
+            }
+              
+        }
+    }
 }
 
 void PM_7003::read_sensor(void) {

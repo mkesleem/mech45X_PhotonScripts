@@ -11,12 +11,13 @@
 #define SAMPLING_TIME 280
 #define SLEEP_TIME 912
 #define MAX_READ_COUNT 5
+#define MAX_FRAME_SYNC_COUNT 40
 
 class PM_7003 {
   public:
     PM_7003();
     virtual ~PM_7003();
-    void run_PM_sensor(void);
+    bool run_PM_sensor(void);
     
   private:
     int current_byte;
@@ -28,6 +29,7 @@ class PM_7003 {
 
     bool done_reading;
     int read_count;
+    int frame_sync_count;
     
     char frame_buffer[MAX_FRAME_LENGTH];
     int frame_count;
