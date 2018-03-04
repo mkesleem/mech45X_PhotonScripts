@@ -20,14 +20,15 @@ class T6713 {
     public:
         T6713();
         virtual ~T6713();
-        void print_co2(void);
-        int CO2ppmValue;
+        void run_co2(void);
+
         
     private:
         int data[4];
-        const int read_delay = 2000;
-        const bool DEBUG = true;
-        void read_C02(void);
+        const bool DEBUG = false;
+        void print_co2(void);
+        int CO2ppmValue;
+        void read_co2(void);
         void optional_print(void);
 };
 
