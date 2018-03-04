@@ -111,21 +111,30 @@ SHT31D_ErrorCode ClosedCube_SHT31D::periodicStart(SHT31D_Repeatability repeatabi
 }
 
 SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
-  if (result.error == SHT3XD_NO_ERROR && read_tracker.read_count <= MAX_READ_COUNT) {
+  if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
     Serial.print(text);
+    Serial.print("Reading #");
+    Serial.print(read_count);
     Serial.print(": T=");
     Serial.print(result.t);
     Serial.print("C, RH=");
     Serial.print(result.rh);
     Serial.println("%");
-    read_tracker.read_count += 1;
   } else if (result.error != SHT3XD_NO_ERROR) {
     Serial.print(text);
     Serial.print(": [ERROR] Code #");
     Serial.println(result.error);
-  } else {
-      read_tracker.done_reading = true;
-      read_tracker.read_count = 1;
+  }
+}
+
+SHT31D ClosedCube_SHT31D::save_results(SHT31D result) {
+  if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
+      t_buf[read_count - 1] = result.t;
+      rh_buf[read_count - 1] = result.rh;
+      read_count++;
+  } else if (result.error != SHT3XD_NO_ERROR) {
+      Serial.print("[ERROR] Code #");
+      Serial.println(result.error);
   }
 }
 
@@ -482,9 +491,37 @@ bool ClosedCube_SHT31D::start_sht(void) {
     else {return true;}
 }
 
-SHT31D ClosedCube_SHT31D::run_sht(void) {
+SHT31D ClosedCube_SHT31D::read_sht(void) {
     SHT31D my_result = periodicFetchData();
     printResult("Periodic Mode", my_result);
-    delay(250);
+    save_results(my_result);
+    calculate_average();
+    delay(1000);
+}
+
+void ClosedCube_SHT31D::calculate_average(void) {
+    if( read_count > MAX_READ_COUNT ) {
+        t_average = 0.00;
+        rh_average = 0.00;
+        for(int k = 0; k < MAX_READ_COUNT; k++) {
+            t_average += t_buf[k];
+            rh_average += rh_buf[k];
+        }
+        t_average = t_average / MAX_READ_COUNT;
+        rh_average = rh_average / MAX_READ_COUNT;
+
+        Serial.print("MHD T Average: ");
+        Serial.println(t_average);
+        Serial.print("MHT RH Average: ");
+        Serial.println(rh_average);
+        read_count = 1;
+        is_average_taken = true;
+    }
+}
+
+void ClosedCube_SHT31D::run_sht(void) {
+    is_average_taken = false;
+    read_count = 1;
+    while(!is_average_taken) {read_sht();}
 }
 

@@ -125,7 +125,8 @@ public:
     ClosedCube_SHT31D();
 
     bool start_sht(void);
-    SHT31D run_sht(void);
+    void run_sht(void);
+    
 
     SHT31D_ErrorCode begin(uint8_t address);
     SHT31D_ErrorCode clearAll();
@@ -164,6 +165,17 @@ public:
     } read_tracker;
 
 private:
+    float t_buf[MAX_READ_COUNT];
+    float rh_buf[MAX_READ_COUNT];
+    bool is_average_taken;
+    int read_count;
+    float t_average;
+    float rh_average;
+    
+    SHT31D save_results(SHT31D result);
+    SHT31D read_sht(void);
+    void calculate_average(void);
+    
     uint8_t _address;
     SHT31D_RegisterStatus _status;
     
