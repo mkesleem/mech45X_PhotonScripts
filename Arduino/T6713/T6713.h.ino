@@ -15,20 +15,32 @@ For more advanced applications please see the I2C Comm guide.
 
 #include <Wire.h>
 #define ADDR_6713  0x15 // default I2C slave address
+#define MAX_READ_COUNT 5
 
 class T6713 {
     public:
         T6713();
         virtual ~T6713();
-        void run_co2(void);
+        bool start_sensor(void);
+        void run_co2_sensor(void);
 
         
     private:
         int data[4];
         const bool DEBUG = false;
-        void print_co2(void);
         int CO2ppmValue;
+
+        int co2_average;
+        int co2_buf[MAX_READ_COUNT];
+        int read_count;
+        bool is_average_taken;
+
+        void print_co2(void);
         void read_co2(void);
+        void save_co2_values(void);
+        void print_average_co2(void);
+        
+        void read_from_sensor(void);
         void optional_print(void);
 };
 
