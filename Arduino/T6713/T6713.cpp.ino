@@ -56,8 +56,11 @@ void T6713::print_average_co2(void) {
         co2_average = 0;
         for(int k = 0; k < MAX_READ_COUNT; k++) {co2_average += co2_buf[k];}
       co2_average = co2_average / MAX_READ_COUNT;
+      delay(500);
+      Serial.println("-----------------------");
       Serial.print("CO2 PPM Average Reading: ");
       Serial.println(co2_average);
+      Serial.println("-----------------------");
       read_count = 1;
       is_average_taken = true;
     }
@@ -88,11 +91,17 @@ void T6713::optional_print(void) {
 }
 
 bool T6713::start_sensor(void) {
+    Serial.println("Trying to start CO2 sensor");
+    delay(500);
     for(int k = 0; k < 5; k++){
         read_from_sensor();
-        if(CO2ppmValue > 0){return true;}
-        delay(1000);
+        if(CO2ppmValue > 0){
+            Serial.println("Successfully started CO2 sensor!");
+            delay(500);
+            return true;
+        }
     }
     Serial.println("Failed to start CO2 sensor");
+    delay(500);
     return false;
 }
