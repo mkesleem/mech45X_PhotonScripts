@@ -129,13 +129,6 @@ SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
   }
 }
 
-bool ClosedCube_SHT31D::check_done_reading(void) {
-    if(read_tracker.done_reading == true) {
-        read_tracker.done_reading = false;
-        return true;
-    } else {return false;}
-}
-
 SHT31D ClosedCube_SHT31D::readTempAndHumidity(SHT31D_Repeatability repeatability, SHT31D_Mode mode, uint8_t timeout)
 {
   SHT31D result;
@@ -474,4 +467,17 @@ SHT31D ClosedCube_SHT31D::returnError(SHT31D_ErrorCode error) {
   result.rh = 0;
   result.error = error;
   return result;
+}
+
+/**********************************************************************************/
+bool ClosedCube_SHT31D::start_SHT(void) {
+    begin(ADDR_SHT); // I2C address: 0x44 or 0x45
+    Serial.print("Serial #");
+    Serial.println(readSerialNumber());
+
+    if (periodicStart(SHT3XD_REPEATABILITY_HIGH, SHT3XD_FREQUENCY_10HZ) != SHT3XD_NO_ERROR) {
+        Serial.println("[ERROR] Cannot start periodic mode");
+        return false;
+    }
+    else {return true;}
 }

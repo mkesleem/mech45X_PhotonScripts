@@ -1,6 +1,7 @@
 #ifndef SHT35D
 #define SHT35D
 #define MAX_READ_COUNT 5
+#define ADDR_SHT 0x45
 
 #include <Arduino.h>
 
@@ -122,9 +123,8 @@ class ClosedCube_SHT31D {
 
 public:
     ClosedCube_SHT31D();
-    
-    bool check_done_reading(void);
-    SHT31D initilze_values(void);
+
+    bool start_SHT(void);
 
     SHT31D_ErrorCode begin(uint8_t address);
     SHT31D_ErrorCode clearAll();
