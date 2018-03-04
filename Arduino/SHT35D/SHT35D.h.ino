@@ -118,77 +118,71 @@ struct SHT31D {
   SHT31D_ErrorCode error;
 };
 
-struct SHT_read_tracker {
-    int read_count;
-  bool done_reading;
-};
-
 class ClosedCube_SHT31D {
 
 public:
-  ClosedCube_SHT31D();
-
+    ClosedCube_SHT31D();
+    
     bool check_done_reading(void);
     SHT31D initilze_values(void);
 
-  SHT31D_ErrorCode begin(uint8_t address);
-  SHT31D_ErrorCode clearAll();
-  SHT31D_RegisterStatus readStatusRegister();
-
-  SHT31D_ErrorCode heaterEnable();
-  SHT31D_ErrorCode heaterDisable();
-
-  SHT31D_ErrorCode softReset();
-  SHT31D_ErrorCode generalCallReset();
-
-  SHT31D_ErrorCode artEnable();
-
-  uint32_t readSerialNumber();
-
+    SHT31D_ErrorCode begin(uint8_t address);
+    SHT31D_ErrorCode clearAll();
+    SHT31D_RegisterStatus readStatusRegister();
+    
+    SHT31D_ErrorCode heaterEnable();
+    SHT31D_ErrorCode heaterDisable();
+    
+    SHT31D_ErrorCode softReset();
+    SHT31D_ErrorCode generalCallReset();
+    
+    SHT31D_ErrorCode artEnable();
+    
+    uint32_t readSerialNumber();
+    
     SHT31D printResult(String text, SHT31D result);
-  SHT31D readTempAndHumidity(SHT31D_Repeatability repeatability, SHT31D_Mode mode, uint8_t timeout);
-  SHT31D readTempAndHumidityClockStretch(SHT31D_Repeatability repeatability);
-  SHT31D readTempAndHumidityPolling(SHT31D_Repeatability repeatability, uint8_t timeout);
-
-  SHT31D_ErrorCode periodicStart(SHT31D_Repeatability repeatability, SHT31D_Frequency frequency);
-  SHT31D periodicFetchData();
-  SHT31D_ErrorCode periodicStop();
-
-  SHT31D_ErrorCode writeAlertHigh(float temperatureSet, float temperatureClear, float humiditySet, float humidityClear);
-  SHT31D readAlertHighSet();
-  SHT31D readAlertHighClear();
-
-  SHT31D_ErrorCode writeAlertLow(float temperatureClear, float temperatureSet, float humidityClear, float humiditySet);
-  SHT31D readAlertLowSet();
-  SHT31D readAlertLowClear();
-  
-  struct SHT_read_tracker {
+    SHT31D readTempAndHumidity(SHT31D_Repeatability repeatability, SHT31D_Mode mode, uint8_t timeout);
+    SHT31D readTempAndHumidityClockStretch(SHT31D_Repeatability repeatability);
+    SHT31D readTempAndHumidityPolling(SHT31D_Repeatability repeatability, uint8_t timeout);
+    
+    SHT31D_ErrorCode periodicStart(SHT31D_Repeatability repeatability, SHT31D_Frequency frequency);
+    SHT31D periodicFetchData();
+    SHT31D_ErrorCode periodicStop();
+    
+    SHT31D_ErrorCode writeAlertHigh(float temperatureSet, float temperatureClear, float humiditySet, float humidityClear);
+    SHT31D readAlertHighSet();
+    SHT31D readAlertHighClear();
+    
+    SHT31D_ErrorCode writeAlertLow(float temperatureClear, float temperatureSet, float humidityClear, float humiditySet);
+    SHT31D readAlertLowSet();
+    SHT31D readAlertLowClear();
+    
+    struct SHT_read_tracker {
         int read_count;
       bool done_reading;
     } read_tracker;
 
 private:
-  uint8_t _address;
-  SHT31D_RegisterStatus _status;
-
-  SHT31D_ErrorCode writeCommand(SHT31D_Commands command);
-  SHT31D_ErrorCode writeAlertData(SHT31D_Commands command, float temperature, float humidity);
-
-  uint8_t checkCrc(uint8_t data[], uint8_t checksum);
-  uint8_t calculateCrc(uint8_t data[]);
-
-  float calculateHumidity(uint16_t rawValue);
-  float calculateTemperature(uint16_t rawValue);
-
-  uint16_t calculateRawHumidity(float value);
-  uint16_t calculateRaWTemperature(float value);
-
-  SHT31D readTemperatureAndHumidity();
-  SHT31D readAlertData(SHT31D_Commands command);
-  SHT31D_ErrorCode read(uint16_t* data, uint8_t numOfPair);
-
-  SHT31D returnError(SHT31D_ErrorCode command);
-  
+    uint8_t _address;
+    SHT31D_RegisterStatus _status;
+    
+    SHT31D_ErrorCode writeCommand(SHT31D_Commands command);
+    SHT31D_ErrorCode writeAlertData(SHT31D_Commands command, float temperature, float humidity);
+    
+    uint8_t checkCrc(uint8_t data[], uint8_t checksum);
+    uint8_t calculateCrc(uint8_t data[]);
+    
+    float calculateHumidity(uint16_t rawValue);
+    float calculateTemperature(uint16_t rawValue);
+    
+    uint16_t calculateRawHumidity(float value);
+    uint16_t calculateRaWTemperature(float value);
+    
+    SHT31D readTemperatureAndHumidity();
+    SHT31D readAlertData(SHT31D_Commands command);
+    SHT31D_ErrorCode read(uint16_t* data, uint8_t numOfPair);
+    
+    SHT31D returnError(SHT31D_ErrorCode command);
 };
 
 #endif

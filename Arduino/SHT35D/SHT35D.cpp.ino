@@ -110,11 +110,6 @@ SHT31D_ErrorCode ClosedCube_SHT31D::periodicStart(SHT31D_Repeatability repeatabi
   return error;
 }
 
-SHT31D ClosedCube_SHT31D::initilze_values(void) {
-    read_tracker.read_count = 1;
-    read_tracker.done_reading = false;
-}
-
 SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
   if (result.error == SHT3XD_NO_ERROR && read_tracker.read_count <= MAX_READ_COUNT) {
     Serial.print(text);
