@@ -480,15 +480,21 @@ SHT31D ClosedCube_SHT31D::returnError(SHT31D_ErrorCode error) {
 
 /**********************************************************************************/
 bool ClosedCube_SHT31D::start_sht(void) {
+    Serial.println("Trying to start SHT sensor...");
+    delay(500);
     begin(ADDR_SHT); // I2C address: 0x44 or 0x45
     Serial.print("Serial #");
     Serial.println(readSerialNumber());
-
+    delay(500);
+    
     if (periodicStart(SHT3XD_REPEATABILITY_HIGH, SHT3XD_FREQUENCY_10HZ) != SHT3XD_NO_ERROR) {
         Serial.println("[ERROR] Cannot start periodic mode");
         return false;
     }
-    else {return true;}
+    else {
+        Serial.println("Successfully started SHT sensor!");
+        return true;
+    }
 }
 
 SHT31D ClosedCube_SHT31D::read_sht(void) {
@@ -509,10 +515,14 @@ void ClosedCube_SHT31D::calculate_average(void) {
         }
         t_average = t_average / MAX_READ_COUNT;
         rh_average = rh_average / MAX_READ_COUNT;
-
-        Serial.print("MHD T Average: ");
+        
+        delay(500);
+        Serial.println("-----------------------");
+        Serial.println("SHT Sensor Average Readings");
+        Serial.println("-----------------------");
+        Serial.print("SHT T Average: ");
         Serial.println(t_average);
-        Serial.print("MHT RH Average: ");
+        Serial.print("SHT RH Average: ");
         Serial.println(rh_average);
         read_count = 1;
         is_average_taken = true;
