@@ -326,6 +326,10 @@ void Adafruit_CCS811::print_average_reading(void) {
       TVOC_ave = TVOC_ave / NUMBER_OF_VALUES;
       temp_ave = temp_ave / NUMBER_OF_VALUES;
       
+      delay(500);
+      Serial.println("-----------------------");
+      Serial.println("VOC Sensor Average Readings:");
+      Serial.println("-----------------------");
       Serial.print("CCS eCO2 Average: ");
       Serial.println(eCO2_ave);
       Serial.print("CCS TVOC Average: ");
@@ -345,12 +349,14 @@ void Adafruit_CCS811::calibrate_temperature(void) {
 }
 
 bool Adafruit_CCS811::start_voc(void) {
+    Serial.println("Trying to start VOC Sensor...");
     if(!begin(ADDR_821)){
         Serial.println("Failed to start CC2821 VOC sensor! Wiring is likely incorrect.");
         return false;
     }
     else {
         calibrate_temperature();
+        Serial.println("Successfully started VOC Sensor!");
         return true;
     }
 }

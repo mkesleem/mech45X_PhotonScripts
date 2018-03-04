@@ -9,7 +9,7 @@
 
 #include <Wire.h>
 #define ADDR_821 0x5A
-#define NUMBER_OF_VALUES 10
+#define NUMBER_OF_VALUES 5
 
 /*=========================================================================
     REGISTERS
