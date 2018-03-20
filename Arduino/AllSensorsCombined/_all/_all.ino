@@ -42,7 +42,14 @@ void setup() {
     pinMode(pm_transistor_control,OUTPUT);
     pinMode(co2_transistor_control,OUTPUT);
     Serial.println("Initializing");
-
+    
+    Serial.println("Trying to start CO2 sensor");
+    delay(1000);
+    digitalWrite(co2_transistor_control, HIGH);
+    start_co2 = myCO2.start_sensor();
+    Serial.println("-----------------------");
+    digitalWrite(co2_transistor_control, LOW);
+    
     start_mrt = myMRT.start_mrt();
     Serial.println("-----------------------");
     start_sht = mySHT.start_sht();
@@ -63,14 +70,12 @@ void setup() {
 
 void loop()
 {
-    digitalWrite(co2_transistor_control, HIGH);
-    while(mhz19_average_check == false) {
-        myCO2.run_MHZ19();
-        mhz19_average_check = myCO2.transistor_on_off();
+    if(start_co2) {
+        digitalWrite(co2_transistor_control, HIGH);
+        start_co2 = myCO2.run_sensor();
+        digitalWrite(co2_transistor_control, LOW);
+        delay(1000);
     }
-    mhz19_average_check = false;
-    digitalWrite(co2_transistor_control, LOW);
-    
     
     if(start_pm) {
         Serial.println("Reading from PMS Sensor");
@@ -154,3 +159,4 @@ void loop()
         }
     }
 }
+
