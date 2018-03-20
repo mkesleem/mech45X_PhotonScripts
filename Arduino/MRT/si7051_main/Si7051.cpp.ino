@@ -1,40 +1,40 @@
 #include <Wire.h>
-#include "ClosedCube_Si7051.h"
+#include "MRT.h"
 
 ClosedCube_Si7051::ClosedCube_Si7051()
 {
 }
 
 void ClosedCube_Si7051::begin(uint8_t address) {
-  _address = address;
-  Wire.begin();
-
-  Wire.beginTransmission(_address);
-  Wire.write(0xE6);
-  Wire.write(0x0);
-  Wire.endTransmission();
+    _address = address;
+    Wire.begin();
+    
+    Wire.beginTransmission(_address);
+    Wire.write(0xE6);
+    Wire.write(0x0);
+    Wire.endTransmission();
 
 }
 
 float ClosedCube_Si7051::readT() {
-  return readTemperature();
+    return readTemperature();
 }
 
 float ClosedCube_Si7051::readTemperature() {
-  Wire.beginTransmission(_address);
-  Wire.write(0xF3);
-  Wire.endTransmission();
-
-  delay(15);
-
-  Wire.requestFrom(_address, (uint8_t)2);
+    Wire.beginTransmission(_address);
+    Wire.write(0xF3);
+    Wire.endTransmission();
+    
+    delay(15);
+    
+    Wire.requestFrom(_address, (uint8_t)2);
     delay(25);
-  byte msb = Wire.read();
-  byte lsb = Wire.read();
-
-  uint16_t val = msb << 8 | lsb;
-
-  return (175.72*val) / 65536 - 46.85;
+    byte msb = Wire.read();
+    byte lsb = Wire.read();
+    
+    uint16_t val = msb << 8 | lsb;
+    
+    return (175.72*val) / 65536 - 46.85;
 }
 
 float ClosedCube_Si7051::run_mrt(void) {
@@ -71,4 +71,8 @@ bool ClosedCube_Si7051::start_mrt(void) {
         Serial.println("Successfully started MRT sensor!");
         return true;
     }
+}
+
+float ClosedCube_Si7051::get_MRT_ave(void) {
+    return T_ave;
 }

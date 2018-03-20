@@ -8,19 +8,20 @@
 
 class ClosedCube_Si7051 {
 public:
-  ClosedCube_Si7051();
-
-  float readT(); // short-cut for readTemperature
-  float run_mrt(void);
-  bool start_mrt(void);
+    ClosedCube_Si7051();
+    
+    float readT(); // short-cut for readTemperature
+    float run_mrt(void);
+    bool start_mrt(void);
+    float get_MRT_ave(void);
 
 private:
-  uint8_t _address;
-  void begin(uint8_t address);
-  float readTemperature();
-  float T_buf[MAX_READ_COUNT];
-  float T_ave;
-  int read_count;
+    uint8_t _address;
+    void begin(uint8_t address);
+    float readTemperature();
+    float T_buf[MAX_READ_COUNT];
+    float T_ave;
+    int read_count;
 };
 
 #endif
