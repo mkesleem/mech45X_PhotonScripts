@@ -127,17 +127,28 @@ void loop()
     }
 
     if(publish_data) {
+        char data[1000];
         if(start_mrt){
             mrt_t_ave = myMRT.get_MRT_ave();
-            char data[1000];
-            sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
-            Particle.publish("MRT Temperature", data, PRIVATE);
+            
+            //sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
+            //Particle.publish("MRT Temperature", data, PRIVATE);
         }
+        else
+        {
+            mrt_t_ave = -1;
+            //sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
+        }
+        
         if(start_co2){
             co2_ave = myCO2.get_co2_ave();
-            char data[1000];
-            sprintf(data,"{ \"CO2 Concentration\": \"%i\"}" , co2_ave);
-            Particle.publish("CO2 Concentration", data, PRIVATE);
+            
+            //sprintf(data,"{ \"CO2 Concentration\": \"%i\"}" , co2_ave);
+            //Particle.publish("CO2 Concentration", data, PRIVATE);
+        }
+        else
+        {
+            co2_ave = -1;
         }
         
         if(start_voc){
@@ -145,18 +156,30 @@ void loop()
             voc_TVOC_ave = myVOC.get_TVOC_ave();
             voc_t_ave = myVOC.get_temp_ave();
             
-            char data[1000];
-            sprintf(data,"{ \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"VOC Temperature\": \"%i\" }" , voc_eCO2_ave,voc_TVOC_ave,voc_t_ave);
-            Particle.publish("VOC Sensor", data, PRIVATE);
+           // sprintf(data,"{ \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"VOC Temperature\": \"%i\" }" , voc_eCO2_ave,voc_TVOC_ave,voc_t_ave);
+            //Particle.publish("VOC Sensor", data, PRIVATE);
+        }
+        else
+        {
+            voc_eCO2_ave = -1;
+            voc_TVOC_ave = -1;
+            voc_t_ave = -1;
         }
         
         if(start_sht) {
             sht_rh_ave = mySHT.get_rh_ave();
             sht_t_ave = mySHT.get_t_ave();
-            char data[1000];
-            sprintf(data,"{ \"SHT Temperature\": \"%f\",\"SHT Humidity\": \"%f\" }" , sht_rh_ave,sht_t_ave);
-            Particle.publish("SHT RH/T", data, PRIVATE);
+            
+            //sprintf(data,"{ \"SHT Temperature\": \"%f\",\"SHT Humidity\": \"%f\" }" , sht_rh_ave,sht_t_ave);
+            //Particle.publish("SHT RH/T", data, PRIVATE);
         }
+        else{
+             sht_rh_ave = -1;
+            sht_t_ave = -1;
+        }
+        sprintf(data,"{ \"MRT Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"VOC Temperature\": \"%i\", \"SHT Temperature\": \"%f\",\"SHT Humidity\": \"%f\"}" , mrt_t_ave,co2_ave,voc_eCO2_ave,voc_TVOC_ave,voc_t_ave,sht_t_ave,sht_rh_ave);
+        Serial.println(data);
+        //Particle.publish("IEQ Data", data, PRIVATE);
     }
 }
 
