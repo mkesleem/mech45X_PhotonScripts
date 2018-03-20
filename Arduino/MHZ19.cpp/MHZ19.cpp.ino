@@ -196,3 +196,7 @@ void MHZ19::fill_frame_buffer(void) {
         frame_sync_count++;
     }
 }
+
+int MHZ19::get_co2_ave(void) {
+    return mhz19_ppm_average;
+}

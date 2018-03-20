@@ -17,6 +17,7 @@ class MHZ19 {
         int getCO2(void);
         bool run_sensor(void);
         bool start_sensor(void);
+        int get_co2_ave(void);
     
     private:
         char frame_buffer[MAX_FRAME_LEN];
