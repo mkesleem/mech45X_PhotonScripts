@@ -111,9 +111,9 @@ SHT31D_ErrorCode ClosedCube_SHT31D::periodicStart(SHT31D_Repeatability repeatabi
 }
 
 SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
-  if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
+  if (result.error == SHT3XD_NO_ERROR) {
     Serial.print(text);
-    Serial.print("Reading #");
+    Serial.print("Reading #: ");
     Serial.print(read_count);
     Serial.print(": T=");
     Serial.print(result.t);
@@ -124,17 +124,6 @@ SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
     Serial.print(text);
     Serial.print(": [ERROR] Code #");
     Serial.println(result.error);
-  }
-}
-
-SHT31D ClosedCube_SHT31D::save_results(SHT31D result) {
-  if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
-      t_buf[read_count - 1] = result.t;
-      rh_buf[read_count - 1] = result.rh;
-      read_count++;
-  } else if (result.error != SHT3XD_NO_ERROR) {
-      Serial.print("[ERROR] Code #");
-      Serial.println(result.error);
   }
 }
 
@@ -478,66 +467,54 @@ SHT31D ClosedCube_SHT31D::returnError(SHT31D_ErrorCode error) {
   return result;
 }
 
-/**********************************************************************************/
-bool ClosedCube_SHT31D::start_sht(void) {
-    Serial.println("Trying to start SHT sensor...");
-    delay(500);
-    begin(ADDR_SHT); // I2C address: 0x44 or 0x45
-    Serial.print("Serial #");
-    Serial.println(readSerialNumber());
-    delay(500);
-    
-    if (periodicStart(SHT3XD_REPEATABILITY_HIGH, SHT3XD_FREQUENCY_10HZ) != SHT3XD_NO_ERROR) {
-        Serial.println("[ERROR] Cannot start periodic mode");
-        return false;
-    }
-    else {
-        Serial.println("Successfully started SHT sensor!");
-        return true;
-    }
+void ClosedCube_SHT31D::start_SHT(void) {
+  begin(0x45); // I2C address: 0x44 or 0x45
+
+  Serial.print("Serial #");
+  Serial.println(readSerialNumber());
+
+  if (periodicStart(SHT3XD_REPEATABILITY_HIGH, SHT3XD_FREQUENCY_10HZ) != SHT3XD_NO_ERROR) {
+    Serial.println("[ERROR] Cannot start periodic mode");}
 }
 
-SHT31D ClosedCube_SHT31D::read_sht(void) {
-    SHT31D my_result = periodicFetchData();
+void ClosedCube_SHT31D::run_SHT(void) {
+    is_average_taken = false;
+
+    while(!is_average_taken) {read_SHT();}
+}
+
+void ClosedCube_SHT31D::read_SHT(void) {
+    SHT31D my_result;
+    my_result = periodicFetchData();
     printResult("Periodic Mode", my_result);
-    save_results(my_result);
-    calculate_average();
-    delay(1000);
+    take_average(my_result);
+    print_average();    
 }
 
-void ClosedCube_SHT31D::calculate_average(void) {
-    if( read_count > MAX_READ_COUNT ) {
-        t_average = 0.00;
-        rh_average = 0.00;
+void ClosedCube_SHT31D::take_average(SHT31D my_result) {
+    if (read_count < MAX_READ_COUNT && my_result.error == SHT3XD_NO_ERROR) {
+        t_buf[read_count] = my_result.t;
+        rh_buf[read_count] = my_result.rh;
+        read_count += 1;
+    }
+}
+
+void ClosedCube_SHT31D::print_average(void) {
+    if(reading_count > MAX_READ_COUNT) {
+        t_average = 0;
+        rh_average = 0;
         for(int k = 0; k < MAX_READ_COUNT; k++) {
             t_average += t_buf[k];
             rh_average += rh_buf[k];
         }
         t_average = t_average / MAX_READ_COUNT;
         rh_average = rh_average / MAX_READ_COUNT;
-        
-        delay(500);
-        Serial.println("-----------------------");
-        Serial.println("SHT Sensor Average Readings");
-        Serial.println("-----------------------");
-        Serial.print("SHT T Average: ");
+        Serial.print("SHT35D Average Temperature: ");
         Serial.println(t_average);
-        Serial.print("SHT RH Average: ");
+        Serial.print("SHT35D Average Relative Humidity: ");
         Serial.println(rh_average);
-        read_count = 1;
+        reading_count = 1;
         is_average_taken = true;
     }
 }
 
-void ClosedCube_SHT31D::run_sht(void) {
-    is_average_taken = false;
-    read_count = 1;
-    while(!is_average_taken) {read_sht();}
-}
-
-float ClosedCube_SHT31D::get_t_ave(void) {
-    return t_average;
-}
-float ClosedCube_SHT31D::get_rh_ave(void) {
-    return rh_average;
-}
