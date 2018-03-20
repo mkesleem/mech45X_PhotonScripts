@@ -1,16 +1,12 @@
-/*
- * MHZ19.h
- *
- *  Created on: Feb 7, 2018
- *      Author: michael
- */
-
 #ifndef MHZ19_H
 #define MHZ19_H
 #define MHZ19_ZEROTH_BYTE 0xFF
 #define MHZ19_FIRST_BYTE 0x86
 #define MAX_FRAME_LEN 9
-#define NUMBER_OF_VALUES 5
+#define NUMBER_OF_VALUES 20
+#define DISCARD_VALUES 10
+#define STARTUP_TIME 10
+#define MAX_FRAME_READ_COUNT 40
 #include "WProgram.h"
 
 
@@ -19,30 +15,37 @@ class MHZ19 {
         MHZ19();
         virtual ~MHZ19();
         int getCO2(void);
-        void run_MHZ19(void);
-        bool transistor_on_off(void);
+        bool run_sensor(void);
+        bool start_sensor(void);
     
     private:
         char frame_buffer[MAX_FRAME_LEN];
         const uint8_t mhz19_read_command[MAX_FRAME_LEN] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};;
+        
         bool sync_state;
-        int drain;
-        int frame_count;
+        bool does_sensor_work;
+        bool is_average_taken;
+        
+        int frame_sync_count;
+        int frame_read_count;
         int byte_sum;
         int current_byte;
-        int mhz19_ppm;
-        int mhz19_ppm_average;
+        int drain;
+        int co2_ppm;
+        int co2_ppm_average;
         int reading_count;
         int mhz19_buffer[NUMBER_OF_VALUES];
-        bool is_average_taken;
         
         void frame_sync(void);
         void read_sensor(void);
         void serial_drain(void);
-        void fill_buffer(void);
+        void fill_frame_buffer(void);
+        void add_to_ave_buf(void);
         void print_current_reading(void);
+        void calculate_average_reading(void);
         void print_average_reading(void);
         void take_average(void);
+        void start_countdown(int start_time);
 };
 
 #endif /* MHZ19_H_ */
