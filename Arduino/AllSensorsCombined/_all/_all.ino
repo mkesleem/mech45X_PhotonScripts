@@ -28,6 +28,7 @@ int voc_eCO2_ave = -1;
 int voc_TVOC_ave = -1;
 int voc_t_ave = -1;
 float mrt_t_ave = -1;
+float pm_ave = -1;
 
 // should we publish data
 bool publish_data = true;
@@ -72,6 +73,7 @@ void loop()
 {
     if(start_co2) {
         digitalWrite(co2_transistor_control, HIGH);
+        delay(1800);
         start_co2 = myCO2.run_sensor();
         digitalWrite(co2_transistor_control, LOW);
         delay(1000);
@@ -81,7 +83,7 @@ void loop()
         Serial.println("Reading from PMS Sensor");
         Serial.println("-----------------------");
         digitalWrite(pm_transistor_control, HIGH);
-        delay(500);
+        delay(10000);
         start_pm = myPM.run_PM_sensor();
         digitalWrite(pm_transistor_control, LOW);
         delay(500);
@@ -139,6 +141,17 @@ void loop()
             mrt_t_ave = -1;
             //sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
         }
+        if(start_pm){
+            pm_ave = myPM.getpm();
+            
+            //sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
+            //Particle.publish("MRT Temperature", data, PRIVATE);
+        }
+        else
+        {
+            pm_ave = -1;
+            //sprintf(data,"{ \"MRT Temperature\": \"%f\"}" , mrt_t_ave);
+        }
         
         if(start_co2){
             co2_ave = myCO2.get_co2_ave();
@@ -174,12 +187,12 @@ void loop()
             //Particle.publish("SHT RH/T", data, PRIVATE);
         }
         else{
-             sht_rh_ave = -1;
+            sht_rh_ave = -1;
             sht_t_ave = -1;
         }
-        sprintf(data,"{ \"MRT Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"VOC Temperature\": \"%i\", \"SHT Temperature\": \"%f\",\"SHT Humidity\": \"%f\"}" , mrt_t_ave,co2_ave,voc_eCO2_ave,voc_TVOC_ave,voc_t_ave,sht_t_ave,sht_rh_ave);
+        sprintf(data,"{ \"MRT Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"SHT Temperature\": \"%f\",\"SHT Humidity\": \"%f\"}" , mrt_t_ave,co2_ave,voc_eCO2_ave,voc_TVOC_ave,pm_ave,sht_t_ave,sht_rh_ave);
         Serial.println(data);
-        //Particle.publish("IEQ Data", data, PRIVATE);
+        Particle.publish("IEQ Data", data, PRIVATE);
     }
 }
 
