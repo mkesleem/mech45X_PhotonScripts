@@ -14,7 +14,7 @@ class MHZ19 {
     public:
         MHZ19();
         virtual ~MHZ19();
-        int getCO2(void);
+        int get_co2_reading(void);
         bool run_sensor(void);
         bool start_sensor(void);
         int get_co2_ave(void);

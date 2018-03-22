@@ -1,16 +1,22 @@
 #include "MHZ19.h"
 
+//*********************************************************// 
+// All of this code has been written by MECH 45X Team 26   // 
+// It has been properly commented                          //
+//*********************************************************// 
+
 MHZ19::MHZ19() {
 }
 
 MHZ19::~MHZ19() {
 }
 
-int MHZ19::getCO2(void) {
-    return co2_ppm;
-}
-
 bool MHZ19::start_sensor(void) {
+    /*
+     * Start sequence for MHZ19
+     * returns true if sensor on, false if sensor off
+     * uses run_sensor() function
+     */
     return (run_sensor());
 }
 
@@ -49,6 +55,9 @@ bool MHZ19::run_sensor(void) {
 }
 
 void MHZ19::start_countdown(int start_time) {
+    /*
+     * Countdown so that users can visualize how long before the sensor starts
+     */
     while(start_time > 0) {
         Serial.print("Starting CO2 Sensor in: ");
         Serial.print(start_time);
@@ -59,6 +68,10 @@ void MHZ19::start_countdown(int start_time) {
 }
 
 void MHZ19::print_current_reading(void) {
+    /*
+     * Prints current reading if reading is valid (i.e. co2_ppm > 0)
+     * and if the maximum number of readings haven't been exceeded
+     */
     if(co2_ppm > 0 && reading_count > DISCARD_VALUES) {
       Serial.print("MHZ19 CO2 PPM Reading ");
       Serial.print(reading_count);
@@ -197,6 +210,6 @@ void MHZ19::fill_frame_buffer(void) {
     }
 }
 
-int MHZ19::get_co2_ave(void) {
-    return co2_ppm_average;
-}
+// getter functions
+int MHZ19::get_co2_ave(void) {return co2_ppm_average;}
+int MHZ19::get_co2_reading(void) {return co2_ppm;}
