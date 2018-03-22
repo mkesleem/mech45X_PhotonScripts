@@ -1,4 +1,16 @@
 #include "CCS821.h"
+
+//*********************************************************//
+// Part 1: CCS821 online library                           //
+// The following code was not written by MECH 45X Team 26  //
+// This section of the code was retrieved from:            //
+// https://learn.adafruit.com/adafruit-ccs811-air-quality-sensor/arduino-wiring-test //
+// This code will not be explained by team 26              //
+// This section of the code is too advanced for team 26 to //
+// understand.                                             //
+// Part 2 explains the code written by Team 26             //
+//*********************************************************//
+
 /**************************************************************************/
 /*! 
     @brief  Setups the I2C interface and hardware and checks for communication.
@@ -7,10 +19,7 @@
 */
 /**************************************************************************/
 bool Adafruit_CCS811::begin(uint8_t addr)
-{
-    read_count = 1;
-    is_average_taken = false;
-    
+{    
     _i2caddr = addr;
     
     _i2c_init();
@@ -272,73 +281,6 @@ void Adafruit_CCS811::write(uint8_t reg, uint8_t *buf, uint8_t num)
     Wire.write((uint8_t *)buf, num);
     Wire.endTransmission();
 }
-/***********************************************************************/
-void Adafruit_CCS811::run_voc(void) {
-    is_average_taken = false;
-
-    while(is_average_taken == false) {
-        read_voc();
-    }
-}
-
-void Adafruit_CCS811::read_voc(void) {
-    if(available()){
-        float temp = calculateTemperature();
-        if(!readData() && read_count <= NUMBER_OF_VALUES){
-            take_average();
-        } else{Serial.println("ERROR!");}
-    }
-    print_average_reading();
-    delay(500);
-}
-
-void Adafruit_CCS811::print_readings(void) {
-    Serial.print("Reading #:");
-    Serial.print(read_count);
-    Serial.print(", CO2: ");
-    Serial.print(geteCO2());
-    Serial.print("ppm, TVOC: ");
-    Serial.print(getTVOC());
-    Serial.print("ppb   Temp:");
-    Serial.println(temp);
-}
-
-void Adafruit_CCS811::take_average(void) {
-    eCO2_buf[read_count-1] = geteCO2();
-    TVOC_buf[read_count-1] = getTVOC();
-    temp_buf[read_count-1] = temp;
-    print_readings();
-    read_count += 1;
-}
-
-void Adafruit_CCS811::print_average_reading(void) {
-    if(read_count > NUMBER_OF_VALUES) {
-        eCO2_ave = 0;
-        TVOC_ave = 0;
-        temp_ave = 0;
-        for(int k = 0; k < NUMBER_OF_VALUES; k++) {
-            eCO2_ave += eCO2_buf[k];
-            TVOC_ave += TVOC_buf[k];
-            temp_ave += temp_buf[k];
-      }
-      eCO2_ave = eCO2_ave / NUMBER_OF_VALUES;
-      TVOC_ave = TVOC_ave / NUMBER_OF_VALUES;
-      temp_ave = temp_ave / NUMBER_OF_VALUES;
-      
-      delay(500);
-      Serial.println("-----------------------");
-      Serial.println("VOC Sensor Average Readings:");
-      Serial.println("-----------------------");
-      Serial.print("CCS eCO2 Average: ");
-      Serial.println(eCO2_ave);
-      Serial.print("CCS TVOC Average: ");
-      Serial.println(TVOC_ave);
-      Serial.print("CCS temp Average: ");
-      Serial.println(temp_ave);
-      read_count = 1;
-      is_average_taken = true;
-    }
-}
 
 void Adafruit_CCS811::calibrate_temperature(void) {
     delay(5000);
@@ -347,7 +289,15 @@ void Adafruit_CCS811::calibrate_temperature(void) {
     setTempOffset(temp - 25.0);
 }
 
+//*********************************************************//
+// Part 2: code written by team 26CCS821 online library    //
+//*********************************************************//
+
 bool Adafruit_CCS811::start_voc(void) {
+    /*
+     * Start voc sensor using the library's begin() function
+     * If sensor is started, calibrate temperature
+     */
     Serial.println("Trying to start VOC Sensor...");
     if(!begin(ADDR_821)){
         Serial.println("Failed to start CC2821 VOC sensor! Wiring is likely incorrect.");
@@ -359,15 +309,101 @@ bool Adafruit_CCS811::start_voc(void) {
         return true;
     }
 }
-        
-int Adafruit_CCS811::get_eCO2_ave(void) {
-    return eCO2_ave;
+
+void Adafruit_CCS811::run_voc(void) {
+    /*
+     * Run the VOC sensor
+     * Take measurements until enough measurements have been taken to calculate the average
+     * use read_voc() to read from sensor
+     */
+    is_average_taken = false;
+    read_count = 1;
+    while(is_average_taken == false) {read_voc();}
 }
 
-int Adafruit_CCS811::get_TVOC_ave(void) {
-    return TVOC_ave;
+void Adafruit_CCS811::read_voc(void) {
+    /*
+     * Read values from voc sensor
+     * IF data is read and max read count has not been exceed
+     * THEN fill_buffer and print_readings and read_count ++
+     * calculate_average_reading
+     * print_average_reading
+     */
+    if(available()){
+        float temp = calculateTemperature();
+        if(!readData() && read_count <= MAX_READ_COUNT){
+            fill_buffer();
+            print_readings();
+            read_count += 1;
+        } else{Serial.println("ERROR!");}
+    }
+    calculate_average_reading();
+    print_average_reading();
 }
 
-int Adafruit_CCS811::get_temp_ave(void) {
-    return temp_ave;
+void Adafruit_CCS811::fill_buffer(void) {
+    /*
+     * add new values to buffers
+     */
+    eCO2_buf[read_count-1] = geteCO2();
+    TVOC_buf[read_count-1] = getTVOC();
+    temp_buf[read_count-1] = temp;
 }
+
+void Adafruit_CCS811::print_readings(void) {
+    /*
+     * Print readings
+     */
+    Serial.print("Reading #:");
+    Serial.print(read_count);
+    Serial.print(", CO2: ");
+    Serial.print(geteCO2());
+    Serial.print("ppm, TVOC: ");
+    Serial.print(getTVOC());
+    Serial.print("ppb   Temp:");
+    Serial.println(temp);
+}
+
+void Adafruit_CCS811::calculate_average_reading(void) {
+    /*
+     * Calculate the average reading if enough readings have been taken
+     */
+    if(read_count > MAX_READ_COUNT) {
+        eCO2_ave = 0;
+        TVOC_ave = 0;
+        temp_ave = 0;
+        for(int k = 0; k < MAX_READ_COUNT; k++) {
+            eCO2_ave += eCO2_buf[k];
+            TVOC_ave += TVOC_buf[k];
+            temp_ave += temp_buf[k];
+      }
+      eCO2_ave = eCO2_ave / MAX_READ_COUNT;
+      TVOC_ave = TVOC_ave / MAX_READ_COUNT;
+      temp_ave = temp_ave / MAX_READ_COUNT;
+
+      read_count = 1;
+      is_average_taken = true;
+    }
+}
+
+void Adafruit_CCS811::print_average_reading(void) {
+      /*
+       * print average reading values
+       */
+      if(is_average_taken) {
+          Serial.println("-----------------------");
+          Serial.println("VOC Sensor Average Readings:");
+          Serial.println("-----------------------");
+          Serial.print("CCS eCO2 Average: ");
+          Serial.println(eCO2_ave);
+          Serial.print("CCS TVOC Average: ");
+          Serial.println(TVOC_ave);
+          Serial.print("CCS temp Average: ");
+          Serial.println(temp_ave);
+      }
+}
+
+// Getter functions for VOC parameters
+int Adafruit_CCS811::get_eCO2_ave(void) {return eCO2_ave;}
+int Adafruit_CCS811::get_TVOC_ave(void) {return TVOC_ave;}
+int Adafruit_CCS811::get_temp_ave(void) {return temp_ave;}

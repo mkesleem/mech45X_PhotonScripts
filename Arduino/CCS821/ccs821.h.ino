@@ -9,7 +9,7 @@
 
 #include <Wire.h>
 #define ADDR_821 0x5A
-#define NUMBER_OF_VALUES 5
+#define MAX_READ_COUNT 5
 
 /*=========================================================================
     REGISTERS
@@ -136,8 +136,9 @@ class Adafruit_CCS811 {
         
         void read_voc(void);
         void print_readings(void);
-        void take_average(void);
-        void print_average_reading(void);
+        void fill_buffer(void) {
+        void calculate_average_reading(void);
+        void Adafruit print_average_reading(void);
         void calibrate_temperature(void);
     
         bool is_average_taken;
