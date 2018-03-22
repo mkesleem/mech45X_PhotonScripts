@@ -18,6 +18,7 @@ class PM_7003 {
         PM_7003();
         virtual ~PM_7003();
         bool run_PM_sensor(void);
+        int getpm(void);
     
 private:
     int current_byte;
@@ -26,6 +27,8 @@ private:
     uint16_t byte_sum;
     int drain;
     uint16_t current_data;
+    float pm_avgpm2_5;
+    int pm2_5;
     
     bool done_reading;
     int read_count;
@@ -61,3 +64,4 @@ private:
         uint16_t checksum;
     } packetdata;
 };
+

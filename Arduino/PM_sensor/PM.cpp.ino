@@ -9,6 +9,10 @@ PM_7003::PM_7003() {
 PM_7003::~PM_7003() {
 }
 
+int PM_7003::getpm(void) {
+    return pm_avgpm2_5;
+}
+
 bool PM_7003::run_PM_sensor(void) {
     /*
      * run the PM sensor
@@ -21,7 +25,7 @@ bool PM_7003::run_PM_sensor(void) {
     read_count = 1;
     done_reading = false;
     frame_sync_count = 0;
-
+    pm_avgpm2_5 = 0;
     while(!done_reading && frame_sync_count < MAX_FRAME_SYNC_COUNT) {
         drain_serial();
         delay(500);
@@ -107,7 +111,7 @@ void PM_7003::read_sensor(void) {
      * done_reading = true if enough values have been read
      */
     frame_sync();
-
+    
     while(sync_state == true && Serial1.available() > 0) {
         current_byte = Serial1.read();
         frame_buffer[frame_count] = current_byte;
@@ -118,13 +122,16 @@ void PM_7003::read_sensor(void) {
 
         if (frame_count >= frame_length && read_count <= MAX_READ_COUNT) {
             print_messages();
+            pm_avgpm2_5 = pm_avgpm2_5 + pm2_5;
             read_count++;
             break;
         }
     }
     
     if (read_count > MAX_READ_COUNT) {
+        pm_avgpm2_5 = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
         done_reading = true;
+        
     }
 }
 
@@ -210,8 +217,10 @@ void PM_7003::print_messages(void){
         packetdata.countPM2_5um, packetdata.countPM5_0um, packetdata.countPM10_0um);
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
+        
+    pm2_5 = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
     Serial.println(print_buffer);
     Serial.println("-----------------------");
-    delay(500);
+    delay(500);    
 }
 
