@@ -5,70 +5,73 @@
 
 #include <Arduino.h>
 
+//List of Commands for SHT35D Sensor:
 typedef enum {
-  SHT3XD_CMD_READ_SERIAL_NUMBER = 0x3780,
-
-  SHT3XD_CMD_READ_STATUS = 0xF32D,
-  SHT3XD_CMD_CLEAR_STATUS = 0x3041,
-
-  SHT3XD_CMD_HEATER_ENABLE = 0x306D,
-  SHT3XD_CMD_HEATER_DISABLE = 0x3066,
-
-  SHT3XD_CMD_SOFT_RESET = 0x30A2,
-
-  SHT3XD_CMD_CLOCK_STRETCH_H = 0x2C06,
-  SHT3XD_CMD_CLOCK_STRETCH_M = 0x2C0D,
-  SHT3XD_CMD_CLOCK_STRETCH_L = 0x2C10,
-
-  SHT3XD_CMD_POLLING_H = 0x2400,
-  SHT3XD_CMD_POLLING_M = 0x240B,
-  SHT3XD_CMD_POLLING_L = 0x2416,
-
-  SHT3XD_CMD_ART = 0x2B32,
-
-  SHT3XD_CMD_PERIODIC_HALF_H = 0x2032,
-  SHT3XD_CMD_PERIODIC_HALF_M = 0x2024,
-  SHT3XD_CMD_PERIODIC_HALF_L = 0x202F,
-  SHT3XD_CMD_PERIODIC_1_H = 0x2130,
-  SHT3XD_CMD_PERIODIC_1_M = 0x2126,
-  SHT3XD_CMD_PERIODIC_1_L = 0x212D,
-  SHT3XD_CMD_PERIODIC_2_H = 0x2236,
-  SHT3XD_CMD_PERIODIC_2_M = 0x2220,
-  SHT3XD_CMD_PERIODIC_2_L = 0x222B,
-  SHT3XD_CMD_PERIODIC_4_H = 0x2334,
-  SHT3XD_CMD_PERIODIC_4_M = 0x2322,
-  SHT3XD_CMD_PERIODIC_4_L = 0x2329,
-  SHT3XD_CMD_PERIODIC_10_H = 0x2737,
-  SHT3XD_CMD_PERIODIC_10_M = 0x2721,
-  SHT3XD_CMD_PERIODIC_10_L = 0x272A,
-
-  SHT3XD_CMD_FETCH_DATA = 0xE000,
-  SHT3XD_CMD_STOP_PERIODIC = 0x3093,
-
-  SHT3XD_CMD_READ_ALR_LIMIT_LS = 0xE102,
-  SHT3XD_CMD_READ_ALR_LIMIT_LC = 0xE109,
-  SHT3XD_CMD_READ_ALR_LIMIT_HS = 0xE11F,
-  SHT3XD_CMD_READ_ALR_LIMIT_HC = 0xE114,
-  SHT3XD_CMD_WRITE_ALR_LIMIT_HS = 0x611D,
-  SHT3XD_CMD_WRITE_ALR_LIMIT_HC = 0x6116,
-  SHT3XD_CMD_WRITE_ALR_LIMIT_LC = 0x610B,
-  SHT3XD_CMD_WRITE_ALR_LIMIT_LS = 0x6100,
-
-  SHT3XD_CMD_NO_SLEEP = 0x303E,
+    SHT3XD_CMD_READ_SERIAL_NUMBER = 0x3780,
+    
+    SHT3XD_CMD_READ_STATUS = 0xF32D,
+    SHT3XD_CMD_CLEAR_STATUS = 0x3041,
+    
+    SHT3XD_CMD_HEATER_ENABLE = 0x306D,
+    SHT3XD_CMD_HEATER_DISABLE = 0x3066,
+    
+    SHT3XD_CMD_SOFT_RESET = 0x30A2,
+    
+    SHT3XD_CMD_CLOCK_STRETCH_H = 0x2C06,
+    SHT3XD_CMD_CLOCK_STRETCH_M = 0x2C0D,
+    SHT3XD_CMD_CLOCK_STRETCH_L = 0x2C10,
+    
+    SHT3XD_CMD_POLLING_H = 0x2400,
+    SHT3XD_CMD_POLLING_M = 0x240B,
+    SHT3XD_CMD_POLLING_L = 0x2416,
+    
+    SHT3XD_CMD_ART = 0x2B32,
+    
+    SHT3XD_CMD_PERIODIC_HALF_H = 0x2032,
+    SHT3XD_CMD_PERIODIC_HALF_M = 0x2024,
+    SHT3XD_CMD_PERIODIC_HALF_L = 0x202F,
+    SHT3XD_CMD_PERIODIC_1_H = 0x2130,
+    SHT3XD_CMD_PERIODIC_1_M = 0x2126,
+    SHT3XD_CMD_PERIODIC_1_L = 0x212D,
+    SHT3XD_CMD_PERIODIC_2_H = 0x2236,
+    SHT3XD_CMD_PERIODIC_2_M = 0x2220,
+    SHT3XD_CMD_PERIODIC_2_L = 0x222B,
+    SHT3XD_CMD_PERIODIC_4_H = 0x2334,
+    SHT3XD_CMD_PERIODIC_4_M = 0x2322,
+    SHT3XD_CMD_PERIODIC_4_L = 0x2329,
+    SHT3XD_CMD_PERIODIC_10_H = 0x2737,
+    SHT3XD_CMD_PERIODIC_10_M = 0x2721,
+    SHT3XD_CMD_PERIODIC_10_L = 0x272A,
+    
+    SHT3XD_CMD_FETCH_DATA = 0xE000,
+    SHT3XD_CMD_STOP_PERIODIC = 0x3093,
+    
+    SHT3XD_CMD_READ_ALR_LIMIT_LS = 0xE102,
+    SHT3XD_CMD_READ_ALR_LIMIT_LC = 0xE109,
+    SHT3XD_CMD_READ_ALR_LIMIT_HS = 0xE11F,
+    SHT3XD_CMD_READ_ALR_LIMIT_HC = 0xE114,
+    SHT3XD_CMD_WRITE_ALR_LIMIT_HS = 0x611D,
+    SHT3XD_CMD_WRITE_ALR_LIMIT_HC = 0x6116,
+    SHT3XD_CMD_WRITE_ALR_LIMIT_LC = 0x610B,
+    SHT3XD_CMD_WRITE_ALR_LIMIT_LS = 0x6100,
+    
+    SHT3XD_CMD_NO_SLEEP = 0x303E,
 } SHT31D_Commands;
 
-
+// List of repeatability options for SHT35D:
 typedef enum {
   SHT3XD_REPEATABILITY_HIGH,
   SHT3XD_REPEATABILITY_MEDIUM,
   SHT3XD_REPEATABILITY_LOW,
 } SHT31D_Repeatability;
 
+// List of modes:
 typedef enum {
   SHT3XD_MODE_CLOCK_STRETCH,
   SHT3XD_MODE_POLLING,
 } SHT31D_Mode;
 
+// List of frequency choices
 typedef enum {
   SHT3XD_FREQUENCY_HZ5,
   SHT3XD_FREQUENCY_1HZ,
@@ -77,6 +80,7 @@ typedef enum {
   SHT3XD_FREQUENCY_10HZ
 } SHT31D_Frequency;
 
+// List of errors:
 typedef enum {
   SHT3XD_NO_ERROR = 0,
 
@@ -96,31 +100,40 @@ typedef enum {
   SHT3XD_WIRE_I2C_UNKNOW_ERROR = -40
 } SHT31D_ErrorCode;
 
+// List of statuses:
 typedef union {
-  uint16_t rawData;
-  struct {
-    uint8_t WriteDataChecksumStatus : 1;
-    uint8_t CommandStatus : 1;
-    uint8_t Reserved0 : 2;
-    uint8_t SystemResetDetected : 1;
-    uint8_t Reserved1 : 5;
-    uint8_t T_TrackingAlert : 1;
-    uint8_t RH_TrackingAlert : 1;
-    uint8_t Reserved2 : 1;
-    uint8_t HeaterStatus : 1;
-    uint8_t Reserved3 : 1;
-    uint8_t AlertPending : 1;
-  };
+    uint16_t rawData;
+    struct {
+        uint8_t WriteDataChecksumStatus : 1;
+        uint8_t CommandStatus : 1;
+        uint8_t Reserved0 : 2;
+        uint8_t SystemResetDetected : 1;
+        uint8_t Reserved1 : 5;
+        uint8_t T_TrackingAlert : 1;
+        uint8_t RH_TrackingAlert : 1;
+        uint8_t Reserved2 : 1;
+        uint8_t HeaterStatus : 1;
+        uint8_t Reserved3 : 1;
+        uint8_t AlertPending : 1;
+    };
 } SHT31D_RegisterStatus;
 
 struct SHT31D {
-  float t;
-  float rh;
-  SHT31D_ErrorCode error;
+    /*
+     * Structure for SHT31D
+     * t - temperature
+     * rh - relative humidity
+     * error - error of type SHT31D_ErrorCode
+     */
+    float t;
+    float rh;
+    SHT31D_ErrorCode error;
 };
 
 class ClosedCube_SHT31D {
-
+/*
+ * Class definition for ClosedCube_SHT31D
+ */
 public:
     ClosedCube_SHT31D();
 
@@ -160,11 +173,6 @@ public:
     SHT31D_ErrorCode writeAlertLow(float temperatureClear, float temperatureSet, float humidityClear, float humiditySet);
     SHT31D readAlertLowSet();
     SHT31D readAlertLowClear();
-    
-    struct SHT_read_tracker {
-        int read_count;
-      bool done_reading;
-    } read_tracker;
 
 private:
     float t_buf[MAX_READ_COUNT];
