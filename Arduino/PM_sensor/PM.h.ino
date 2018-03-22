@@ -14,19 +14,19 @@
 #define MAX_FRAME_SYNC_COUNT 40
 
 class PM_7003 {
-  public:
-    PM_7003();
-    virtual ~PM_7003();
-    bool run_PM_sensor(void);
+    public:
+        PM_7003();
+        virtual ~PM_7003();
+        bool run_PM_sensor(void);
     
-  private:
+private:
     int current_byte;
     bool sync_state;
     char print_buffer[256];
     uint16_t byte_sum;
     int drain;
     uint16_t current_data;
-
+    
     bool done_reading;
     int read_count;
     int frame_sync_count;
@@ -42,22 +42,22 @@ class PM_7003 {
     void print_messages(void);
 
     struct PMS7003data {
-      uint8_t  start_frame[2];
-      uint16_t frame_length;
-      uint16_t concPM1_0_factory;
-      uint16_t concPM2_5_factory;
-      uint16_t concPM10_0_factory;
-      uint16_t concPM1_0_ambient;
-      uint16_t concPM2_5_ambient;
-      uint16_t concPM10_0_ambient;
-      uint16_t countPM0_3um;
-      uint16_t countPM0_5um;
-      uint16_t countPM1_0um;
-      uint16_t countPM2_5um;
-      uint16_t countPM5_0um;
-      uint16_t countPM10_0um;
-      uint8_t  version;
-      uint8_t  error;
-      uint16_t checksum;
+        uint8_t  start_frame[2];
+        uint16_t frame_length;
+        uint16_t concPM1_0_factory;
+        uint16_t concPM2_5_factory;
+        uint16_t concPM10_0_factory;
+        uint16_t concPM1_0_ambient;
+        uint16_t concPM2_5_ambient;
+        uint16_t concPM10_0_ambient;
+        uint16_t countPM0_3um;
+        uint16_t countPM0_5um;
+        uint16_t countPM1_0um;
+        uint16_t countPM2_5um;
+        uint16_t countPM5_0um;
+        uint16_t countPM10_0um;
+        uint8_t  version;
+        uint8_t  error;
+        uint16_t checksum;
     } packetdata;
 };
