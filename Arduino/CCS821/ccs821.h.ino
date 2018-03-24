@@ -8,8 +8,14 @@
 #endif
 
 #include <Wire.h>
-#define ADDR_821 0x5A
-#define MAX_READ_COUNT 5
+
+/*=========================================================================
+    I2C ADDRESS/BITS
+    -----------------------------------------------------------------------*/
+    #define CCS811_ADDRESS                (0x5A)
+/*=========================================================================*/
+
+    #define MAX_READ_COUNT 5
 
 /*=========================================================================
     REGISTERS
@@ -33,22 +39,22 @@
     };
   
   //bootloader registers
-    enum
-    {
-        CCS811_BOOTLOADER_APP_ERASE = 0xF1,
-        CCS811_BOOTLOADER_APP_DATA = 0xF2,
-        CCS811_BOOTLOADER_APP_VERIFY = 0xF3,
-        CCS811_BOOTLOADER_APP_START = 0xF4
-    };
+  enum
+  {
+    CCS811_BOOTLOADER_APP_ERASE = 0xF1,
+    CCS811_BOOTLOADER_APP_DATA = 0xF2,
+    CCS811_BOOTLOADER_APP_VERIFY = 0xF3,
+    CCS811_BOOTLOADER_APP_START = 0xF4
+  };
   
-    enum
-    {
-        CCS811_DRIVE_MODE_IDLE = 0x00,
-        CCS811_DRIVE_MODE_1SEC = 0x01,
-        CCS811_DRIVE_MODE_10SEC = 0x02,
-        CCS811_DRIVE_MODE_60SEC = 0x03,
-        CCS811_DRIVE_MODE_250MS = 0x04,
-    };
+  enum
+  {
+    CCS811_DRIVE_MODE_IDLE = 0x00,
+    CCS811_DRIVE_MODE_1SEC = 0x01,
+    CCS811_DRIVE_MODE_10SEC = 0x02,
+    CCS811_DRIVE_MODE_60SEC = 0x03,
+    CCS811_DRIVE_MODE_250MS = 0x04,
+  };
 
 /*=========================================================================*/
 
@@ -62,31 +68,30 @@
 */
 /**************************************************************************/
 class Adafruit_CCS811 {
-    public:
-        //constructors
-        Adafruit_CCS811(void) {};
-        ~Adafruit_CCS811(void) {};
-        
-        void run_voc(void);
-        bool start_voc(void);
-        int get_eCO2_ave(void);
-        int get_TVOC_ave(void);
-        int get_temp_ave(void);
-        
-        bool begin(uint8_t addr);
-        
-        void setEnvironmentalData(uint8_t humidity, double temperature);
-        
-        //calculate temperature based on the NTC register
-        double calculateTemperature();
-        
-        void setThresholds(uint16_t low_med, uint16_t med_high, uint8_t hysteresis = 50);
-        
-        void SWReset();
-        
-        void setDriveMode(uint8_t mode);
-        void enableInterrupt();
-        void disableInterrupt();
+  public:
+    //constructors
+    Adafruit_CCS811(void) {};
+    ~Adafruit_CCS811(void) {};
+    
+    bool start_voc(void);
+    void run_voc(void);
+    float get_eCO2_ave(void);
+        float get_TVOC_ave(void);
+    
+    bool begin(uint8_t addr = CCS811_ADDRESS);
+
+    void setEnvironmentalData(uint8_t humidity, double temperature);
+
+    //calculate temperature based on the NTC register
+    double calculateTemperature();
+    
+    void setThresholds(uint16_t low_med, uint16_t med_high, uint8_t hysteresis = 50);
+
+    void SWReset();
+    
+    void setDriveMode(uint8_t mode);
+    void enableInterrupt();
+    void disableInterrupt();
     
         /**************************************************************************/
         /*! 
@@ -94,7 +99,7 @@ class Adafruit_CCS811 {
             @returns TVOC measurement as 16 bit integer
         */
         /**************************************************************************/
-        uint16_t getTVOC() { return _TVOC; }
+    uint16_t getTVOC() { return _TVOC; }
 
         /**************************************************************************/
         /*! 
@@ -102,7 +107,7 @@ class Adafruit_CCS811 {
             @returns eCO2 measurement as 16 bit integer
         */
         /**************************************************************************/
-        uint16_t geteCO2() { return _eCO2; }
+    uint16_t geteCO2() { return _eCO2; }
     
         /**************************************************************************/
         /*! 
@@ -110,45 +115,40 @@ class Adafruit_CCS811 {
             @param offset the offset to be added to temperature measurements.
         */
         /**************************************************************************/
-        void setTempOffset(float offset) { _tempOffset = offset; }
+    void setTempOffset(float offset) { _tempOffset = offset; }
     
-        //check if data is available to be read
-        bool available();
-        uint8_t readData();
-        
-        bool checkError();
+    //check if data is available to be read
+    bool available();
+    uint8_t readData();
+    
+    bool checkError();
 
-    private:
-        uint8_t _i2caddr;
-        float _tempOffset;
-        
-        uint16_t _TVOC;
-        uint16_t _eCO2;
-        float temp;
-        
-        void      write8(byte reg, byte value);
-        void      write16(byte reg, uint16_t value);
-            uint8_t   read8(byte reg);
-        
-        void read(uint8_t reg, uint8_t *buf, uint8_t num);
-        void write(uint8_t reg, uint8_t *buf, uint8_t num);
-        void _i2c_init();
-        
+  private:
+    float eCO2_buf[MAX_READ_COUNT];
+        float TVOC_buf[MAX_READ_COUNT];
+        float eCO2_ave;
+        float TVOC_ave;
         void read_voc(void);
+        void fill_buffer(void);
         void print_readings(void);
-        void fill_buffer(void) {
         void calculate_average_reading(void);
-        void Adafruit print_average_reading(void);
-        void calibrate_temperature(void);
-    
-        bool is_average_taken;
+        void print_average_reading(void);
         int read_count;
-        int eCO2_ave;
-        int TVOC_ave;
-        int temp_ave;
-        uint16_t TVOC_buf[MAX_READ_COUNT];
-        uint16_t eCO2_buf[MAX_READ_COUNT];
-        float temp_buf[MAX_READ_COUNT];
+        bool is_average_taken;
+    
+    uint8_t _i2caddr;
+    float _tempOffset;
+    
+    uint16_t _TVOC;
+    uint16_t _eCO2;
+    
+    void      write8(byte reg, byte value);
+    void      write16(byte reg, uint16_t value);
+        uint8_t   read8(byte reg);
+    
+    void read(uint8_t reg, uint8_t *buf, uint8_t num);
+    void write(uint8_t reg, uint8_t *buf, uint8_t num);
+    void _i2c_init();
     
 /*=========================================================================
   REGISTER BITFIELDS
