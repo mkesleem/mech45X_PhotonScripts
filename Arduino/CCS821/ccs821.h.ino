@@ -146,9 +146,9 @@ class Adafruit_CCS811 {
         int eCO2_ave;
         int TVOC_ave;
         int temp_ave;
-        uint16_t TVOC_buf[NUMBER_OF_VALUES];
-        uint16_t eCO2_buf[NUMBER_OF_VALUES];
-        float temp_buf[NUMBER_OF_VALUES];
+        uint16_t TVOC_buf[MAX_READ_COUNT];
+        uint16_t eCO2_buf[MAX_READ_COUNT];
+        float temp_buf[MAX_READ_COUNT];
     
 /*=========================================================================
   REGISTER BITFIELDS
