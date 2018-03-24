@@ -29,9 +29,8 @@ bool start_mrt = false;
 int co2_ave = -1;
 float sht_rh_ave = -1;
 float sht_t_ave = -1;
-int voc_eCO2_ave = -1;
-int voc_TVOC_ave = -1;
-int voc_t_ave = -1;
+float voc_eCO2_ave = -1;
+float voc_TVOC_ave = -1;
 float pm_ave = -1;
 float T_g = -1;
 float T_a = -1;
@@ -67,6 +66,7 @@ void setup() {
     Serial.println("-----------------------");
     start_sht = mySHT.start_sht();
     Serial.println("-----------------------");
+    
     start_voc = myVOC.start_voc();
     Serial.println("-----------------------");
 
@@ -143,7 +143,7 @@ void loop() {
         Serial.println("---------------------------");
         delay(500);
     }
-
+    
     if(publish_data) {
         char data[1000];
         if(start_mrt && start_sht){
@@ -185,16 +185,17 @@ void loop() {
         if(start_voc){
             voc_eCO2_ave = myVOC.get_eCO2_ave();
             voc_TVOC_ave = myVOC.get_TVOC_ave();
-            voc_t_ave = myVOC.get_temp_ave();
         } else {
             voc_eCO2_ave = -1;
             voc_TVOC_ave = -1;
-            voc_t_ave = -1;
         }
         
-        sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        
+        //sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
         Serial.println(data);
         Particle.publish("IEQ Data", data, PRIVATE);
+           
     }
 }
 
