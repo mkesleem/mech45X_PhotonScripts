@@ -1,14 +1,18 @@
 #include "CCS821.h"
 
 /*
-Part 1: CCS821 online library
-The following code was not written by MECH 45X Team 26
-This section of the code was retrieved from:
-https://learn.adafruit.com/adafruit-ccs811-air-quality-sensor/arduino-wiring-test
-This code will not be explained by team 26
-This section of the code is too advanced for team 26 to understand.
-Part 2 explains the code written by Team 26
-*/
+ * This is the .cpp file for the ccs821 VOC sensor
+ * The library for this sensor was retrieved on line:
+ * https://learn.adafruit.com/adafruit-ccs811-air-quality-sensor/arduino-wiring-test
+ * MECH 45X Team 26 did not write Part 1, the on line library
+ *
+ * Therefore Part 1 is not properly commented because the
+ * the team does not understand the code.
+ *
+ * Part 2 was written by Team 26 and is properly commented.
+ *
+ * Part 1 begins...
+ */
 
 /**************************************************************************/
 /*! 
@@ -283,7 +287,9 @@ void Adafruit_CCS811::write(uint8_t reg, uint8_t *buf, uint8_t num)
 
 /*
  * Part 2: code written by team 26
-*/
+ * This code was written by Team 26
+ * This code is properly commented 
+ */
 
 bool Adafruit_CCS811::start_voc(void) {
     /*
