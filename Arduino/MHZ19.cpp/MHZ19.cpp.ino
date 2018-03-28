@@ -5,11 +5,8 @@
 // It has been properly commented                          //
 //*********************************************************// 
 
-MHZ19::MHZ19() {
-}
-
-MHZ19::~MHZ19() {
-}
+MHZ19::MHZ19() {}
+MHZ19::~MHZ19() {}
 
 bool MHZ19::start_sensor(void) {
     /*
@@ -34,13 +31,13 @@ bool MHZ19::run_sensor(void) {
     co2_ppm = -1;
     co2_ppm_average = 0;
     is_average_taken = false;
-    does_sensor_work = true;
     reading_count = 1;
+    error_count = 1;
 
     serial_drain();
     start_countdown(STARTUP_TIME);
     
-    while(is_average_taken == false && does_sensor_work == true) {
+    while(is_average_taken == false && error_count < MAX_ERROR_COUNT) {
         memset(frame_buffer, 0, 9);
         read_sensor();
         print_current_reading();
@@ -97,6 +94,10 @@ void MHZ19::add_to_ave_buf(void) {
     if(co2_ppm > 0 && reading_count <= NUMBER_OF_VALUES) {
         mhz19_buffer[reading_count - 1] = co2_ppm;
         reading_count += 1;
+        error_count = 1;
+    }
+    else {
+        error_count ++;
     }
 }
 

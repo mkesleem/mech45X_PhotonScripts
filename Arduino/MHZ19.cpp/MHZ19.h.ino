@@ -5,6 +5,7 @@
 #define MAX_FRAME_LEN 9
 #define NUMBER_OF_VALUES 20
 #define DISCARD_VALUES 10
+#define MAX_ERROR_COUNT 10
 #define STARTUP_TIME 10
 #define MAX_FRAME_READ_COUNT 40
 #include "WProgram.h"
@@ -24,7 +25,6 @@ class MHZ19 {
         const uint8_t mhz19_read_command[MAX_FRAME_LEN] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};;
         
         bool sync_state;
-        bool does_sensor_work;
         bool is_average_taken;
         
         int frame_sync_count;
@@ -35,6 +35,7 @@ class MHZ19 {
         int co2_ppm;
         int co2_ppm_average;
         int reading_count;
+        int error_count;
         int mhz19_buffer[NUMBER_OF_VALUES];
         
         void frame_sync(void);
