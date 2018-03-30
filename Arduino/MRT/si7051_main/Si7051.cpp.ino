@@ -73,41 +73,63 @@ bool ClosedCube_Si7051::start_mrt(void) {
      */
     begin(ADDR_MRT);
     delay(500);
-    if(run_mrt() > DEFAULT_AVERAGE) {
-        Serial.println("Failed to start MRT sensor!");
-        return false;
-    } else {
-        Serial.println("Successfully started MRT sensor!");
-        return true;
-    }
+    return(run_mrt());
 }
 
-float ClosedCube_Si7051::run_mrt(void) {
+bool ClosedCube_Si7051::run_mrt(void) {
     /*
      * Takes MRT measurements until read_count is exceeded
      * once read_count is exceeded, the average is taken
      */
     read_count = 1;
+    error_count = 1;
     
-    while(read_count <= MAX_READ_COUNT) {
-        T_buf[read_count - 1] = readTemperature();
-        Serial.print("Reading #");
-        Serial.print(read_count);
-        Serial.print(": Tg is: ");
-        Serial.println(T_buf[read_count - 1]);
-        read_count ++;
+    while(read_count <= MAX_READ_COUNT && error_count <= MAX_ERROR_COUNT) {
+        float current_T = readTemperature();
+        
+        if(current_T >= DEFAULT_AVERAGE) {
+            Serial.println("------------------------------------------------");
+            Serial.print("Error reading from Globe Thermometer, Tg: ");
+            Serial.println(current_T);
+            Serial.println("------------------------------------------------");
+            error_count ++;
+        } else{
+            T_buf[read_count - 1] = readTemperature();
+            Serial.print("Reading #");
+            Serial.print(read_count);
+            Serial.print(": Tg is: ");
+            Serial.println(T_buf[read_count - 1]);
+            read_count ++;
+            error_count = 1;    
+        }
+        
         delay(250);
     }
+    
     if(read_count > MAX_READ_COUNT) {
         T_ave = 0;
         for(int k = 0; k < MAX_READ_COUNT; k++) {
             T_ave = T_ave + T_buf[k];
         }
         T_ave = T_ave / MAX_READ_COUNT;
+        Serial.println("--------------------");
         Serial.print("Average Tg is: ");
         Serial.println(T_ave);
-        return(T_ave);
+        Serial.println("--------------------");
+        return(true);
     }
+    else if(error_count > MAX_ERROR_COUNT) {
+        T_ave = -1;
+        Serial.println("--------------------------------------------------------------");
+        Serial.println("Error reading from Globe Thermometer, no average Tg calculated");
+        Serial.println("--------------------------------------------------------------");
+        return(false);
+    }
+    else{
+        Serial.println("---------------------------");
+        Serial.println("Failure for no known reason");
+        Serial.println("---------------------------");
+        return(false);}
 }
 
 // Getter function for MRT average value

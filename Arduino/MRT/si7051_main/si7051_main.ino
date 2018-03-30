@@ -1,6 +1,5 @@
-// This #include statement was automatically added by the Particle IDE.
-#include "ClosedCube_Si7051.h"
-
+#include <Wire.h>
+#include "MRT.h"
 /**************************************************************************************
 This is example for ClosedCube Si7051 ±0.1°C Digital Temperature Sensor breakout board
 
@@ -17,9 +16,6 @@ Written by AA for ClosedCube
 MIT License
 **************************************************************************************/
 
-#include <Wire.h>
-#include "ClosedCube_Si7051.h"
-
 ClosedCube_Si7051 myMRT;
 bool start_mrt = false;
 
@@ -33,13 +29,7 @@ void setup()
 
 void loop()
 {
-  if(start_mrt) {
-      myMRT.run_mrt();
-      delay(1000);
-  }
-  else if(!start_mrt) {
-      Serial.println("MRT not working");
-      delay(1000);
-    }
+    myMRT.run_mrt();
+    delay(1000);
 }
 
