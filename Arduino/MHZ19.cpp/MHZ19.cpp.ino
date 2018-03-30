@@ -1,20 +1,57 @@
 #include "MHZ19.h"
+#include "Time.h"
 
 //*********************************************************// 
 // All of this code has been written by MECH 45X Team 26   // 
 // It has been properly commented                          //
 //*********************************************************// 
 
-MHZ19::MHZ19() {}
-MHZ19::~MHZ19() {}
+MHZ19::MHZ19() {
+    first_time = true;
+}
 
-bool MHZ19::start_sensor(void) {
-    /*
-     * Start sequence for MHZ19
-     * returns true if sensor on, false if sensor off
-     * uses run_sensor() function
-     */
-    return (run_sensor());
+MHZ19::~MHZ19() {
+}
+
+void MHZ19::set_transistor(int pin) {
+    co2_transistor_control = pin;
+    pinMode(co2_transistor_control,OUTPUT);
+}
+
+void MHZ19::begin_timer(void) {
+    digitalWrite(co2_transistor_control, HIGH);
+    start_time = now();
+    Serial.print("Start time: ");
+    Serial.println(start_time);
+    first_time = false;
+}
+
+bool MHZ19::check_begin_reading(void) {
+    current_time = now();
+    duration = current_time - start_time;
+    Serial.print("Duration: ");
+    Serial.println(duration);
+    
+    if(duration >= CO2_START_UP_TIME) {
+        Serial.print("Three minutes have elapsed since starting CO2 sensor!");
+        return(true);
+    } else{return(false);}
+}
+
+bool MHZ19::make_sensor_read(void) {
+    if(first_time) {
+        begin_timer();
+        return(false);
+    }
+    else if(check_begin_reading()) {
+        bool return_value = run_sensor();
+        first_time = true;
+        digitalWrite(co2_transistor_control, LOW);
+        return(return_value);
+    }
+    else {
+        return(false);
+    }
 }
 
 bool MHZ19::run_sensor(void) {
@@ -31,13 +68,12 @@ bool MHZ19::run_sensor(void) {
     co2_ppm = -1;
     co2_ppm_average = 0;
     is_average_taken = false;
+    does_sensor_work = true;
     reading_count = 1;
-    error_count = 1;
 
     serial_drain();
-    start_countdown(STARTUP_TIME);
     
-    while(is_average_taken == false && error_count < MAX_ERROR_COUNT) {
+    while(is_average_taken == false && does_sensor_work == true) {
         memset(frame_buffer, 0, 9);
         read_sensor();
         print_current_reading();
@@ -46,22 +82,8 @@ bool MHZ19::run_sensor(void) {
         print_average_reading();
         co2_ppm = -1;
     }
-    if(is_average_taken == true) {
-        return(true);
-    } else {return(false);}
-}
-
-void MHZ19::start_countdown(int start_time) {
-    /*
-     * Countdown so that users can visualize how long before the sensor starts
-     */
-    while(start_time > 0) {
-        Serial.print("Starting CO2 Sensor in: ");
-        Serial.print(start_time);
-        Serial.println("s");
-        delay(1000);
-        start_time = start_time - 1;
-    }
+    if(is_average_taken == true) {return(true);}
+    else {return(false);}
 }
 
 void MHZ19::print_current_reading(void) {
@@ -69,17 +91,11 @@ void MHZ19::print_current_reading(void) {
      * Prints current reading if reading is valid (i.e. co2_ppm > 0)
      * and if the maximum number of readings haven't been exceeded
      */
-    if(co2_ppm > 0 && reading_count > DISCARD_VALUES) {
+    if(co2_ppm > 0) {
       Serial.print("MHZ19 CO2 PPM Reading ");
       Serial.print(reading_count);
       Serial.print(": ");
       Serial.println(co2_ppm);
-    }
-    else if(co2_ppm > 0 && reading_count <= DISCARD_VALUES) {
-        Serial.print("DISCARD - MHZ19 CO2 PPM Reading ");
-        Serial.print(reading_count);
-        Serial.print(": ");
-        Serial.println(co2_ppm);
     }
     else {
       Serial.println("Error reading CO2 PPM from MHZ19");
@@ -94,10 +110,6 @@ void MHZ19::add_to_ave_buf(void) {
     if(co2_ppm > 0 && reading_count <= NUMBER_OF_VALUES) {
         mhz19_buffer[reading_count - 1] = co2_ppm;
         reading_count += 1;
-        error_count = 1;
-    }
-    else {
-        error_count ++;
     }
 }
 
@@ -107,9 +119,9 @@ void MHZ19::calculate_average_reading(void) {
      * THEN calculate the average
      */
     if(reading_count > NUMBER_OF_VALUES) {
-        for(int k = DISCARD_VALUES; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
+        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
       
-        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES - DISCARD_VALUES );
+        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES );
       
         is_average_taken = true;
     }
