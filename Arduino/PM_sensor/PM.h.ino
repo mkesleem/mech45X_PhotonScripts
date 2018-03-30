@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "WProgram.h"
+#include "Time.h"
 
 #define LIB_PM_H
 #define FIRST_BYTE 0x42
@@ -12,13 +13,17 @@
 #define SLEEP_TIME 912
 #define MAX_READ_COUNT 5
 #define MAX_FRAME_SYNC_COUNT 40
+#define PMS_START_UP_TIME 180
+#define MAX_FUNCTION_CALL_COUNT 3
 
 class PM_7003 {
-    public:
-        PM_7003();
-        virtual ~PM_7003();
-        bool run_PM_sensor(void);
-        int getpm(void);
+public:
+    PM_7003();
+    virtual ~PM_7003();
+    int getpm(void);
+    void set_transistor(int ground_pin, int tx_pin);
+    bool make_sensor_read(void);
+    void calibrate_sensor(void);
     
 private:
     int current_byte;
@@ -27,23 +32,36 @@ private:
     uint16_t byte_sum;
     int drain;
     uint16_t current_data;
-    float pm_avgpm2_5;
-    int pm2_5;
-    
-    bool done_reading;
-    int read_count;
-    int frame_sync_count;
-    
+    int pm_ground_control;
+    int pm_tx_control;
     char frame_buffer[MAX_FRAME_LENGTH];
     int frame_count;
     int frame_length;
     
+    int pm_avgpm2_5;
+    int pm2_5;
+    
+    bool done_reading;
+    int read_count;
+    int function_call_count;
+    int frame_sync_count;
+    bool first_time;
+    
+    bool run_PM_sensor(void);
     void drain_serial(void);
     void frame_sync(void);
     void read_sensor(void);
     void data_switch(uint16_t current_data);
     void print_messages(void);
 
+    //time
+    void begin_timer(void);
+    bool check_begin_reading(void);
+    time_t start_time;
+    time_t current_time;
+    time_t duration;
+
+    
     struct PMS7003data {
         uint8_t  start_frame[2];
         uint16_t frame_length;

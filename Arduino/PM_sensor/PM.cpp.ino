@@ -1,25 +1,119 @@
 #include "PM.h"
+#include "Time.h"
 
 PM_7003::PM_7003() {
     current_byte = 0;
     packetdata.frame_length = MAX_FRAME_LENGTH;
     frame_length = MAX_FRAME_LENGTH;
+    first_time = true;
 }
 
 PM_7003::~PM_7003() {
 }
 
-int PM_7003::getpm(void) {
-    return pm_avgpm2_5;
+void PM_7003::set_transistor(int ground_pin, int tx_pin) {
+    /*
+     * Set transistor and set pin mode for transistors
+     * tx_pin turns tx transistor on and off
+     * ground_pin turns power to sensor on and off (transistor goes to goround)
+     */
+    pm_ground_control = ground_pin;
+    pm_tx_control = tx_pin;
+    pinMode(pm_ground_control,OUTPUT);
+    pinMode(pm_tx_control,OUTPUT);
+}
+
+void PM_7003::begin_timer(void) {
+    /* 
+     * Turn sensor on and start timer
+     * (time how long sensor has been on)
+     */
+    digitalWrite(pm_ground_control, HIGH);
+    digitalWrite(pm_tx_control, HIGH);
+    start_time = now();
+    Serial.print("Start time: ");
+    Serial.println(start_time);
+    first_time = false;
+}
+
+bool PM_7003::check_begin_reading(void) {
+    /*
+     * Check if the sensor has been on long enough to begin reading
+     * duration >= PMS_START_UP_TIME
+     */
+    current_time = now();
+    duration = current_time - start_time;
+    Serial.println("-----------------");
+    Serial.print("PMS Duration: ");
+    Serial.println(duration);
+    Serial.println("-----------------");
+    
+    if(duration >= PMS_START_UP_TIME) {
+        Serial.println("Three minutes have elapsed since starting PMS sensor!");
+        return(true);
+    } else{return(false);}
+}
+
+bool PM_7003::make_sensor_read(void) {
+    /*
+     * Get senor to read
+     * Start timer if necessary
+     * Check if timer has been on long enough to rad from sensor
+     * If sensor has been on long enough, start reading
+     * If enough readings have been taken, turn sensor off
+     */
+    if(first_time) {
+        function_call_count = 0;
+        begin_timer();
+        return(false);
+    }
+    else if(function_call_count < MAX_FUNCTION_CALL_COUNT) {
+        if(check_begin_reading()) {
+            Serial.println("------------------------");
+            Serial.print("PMS Function Call Count: ");
+            Serial.println(function_call_count);
+            Serial.println("------------------------");
+            run_PM_sensor();
+            function_call_count ++;
+        } else {return(false);}
+    }
+        
+    if(function_call_count >= MAX_FUNCTION_CALL_COUNT) {
+        first_time = true;
+        digitalWrite(pm_ground_control, LOW);
+        digitalWrite(pm_tx_control, LOW);
+        return(true);
+    } else{return(false);}
+}
+
+void PM_7003::calibrate_sensor(void) {
+    /*
+     * Start timer, if necessary
+     * Wait until the sensor has been on long enough before reading
+     * Once sensor has been on long enough, read forever
+     */
+    if(first_time) {
+        function_call_count = 0;
+        begin_timer();
+    }
+
+    if(check_begin_reading()) {
+        Serial.println("------------------------");
+        Serial.print("PMS Function Call Count: ");
+        Serial.println(function_call_count);
+        Serial.println("------------------------");
+        run_PM_sensor();
+        function_call_count ++;
+    }
 }
 
 bool PM_7003::run_PM_sensor(void) {
     /*
-     * run the PM sensor
      * Start serial connection
-     * 
+     * Initialize variables 
      * drain_serial() and read_sensor() until enough values have been read
-     * to take the average
+     * Take average
+     * end serial connection
      */
     Serial1.begin(9600);
     read_count = 1;
@@ -36,9 +130,9 @@ bool PM_7003::run_PM_sensor(void) {
     
     if(done_reading) {
         Serial.println("---------------------------");
-        Serial.println("Done reading from PM sensor");
+        Serial.print("PM 2.5 Average Reading: ");
+        Serial.println(pm_avgpm2_5);
         Serial.println("---------------------------");
-        Serial.println(" ");
         return true;
     }
     else if(!done_reading && frame_sync_count >= MAX_FRAME_SYNC_COUNT){return false;}
@@ -129,7 +223,9 @@ void PM_7003::read_sensor(void) {
     }
     
     if (read_count > MAX_READ_COUNT) {
-        pm_avgpm2_5 = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
+        float pm_avg_f = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
+        int pm_avg_i = static_cast<int>(pm_avg_f);
+        pm_avgpm2_5 = pm_avg_i;
         done_reading = true;
         
     }
@@ -218,9 +314,15 @@ void PM_7003::print_messages(void){
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
         
-    pm2_5 = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
+    float pm2_5_f = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
+    int pm_2_5_i = static_cast<int>(pm2_5_f);
+    pm2_5 = pm_2_5_i;
     Serial.println(print_buffer);
     Serial.println("-----------------------");
     delay(500);    
+}
+
+int PM_7003::getpm(void) {
+    return pm_avgpm2_5;
 }
 
