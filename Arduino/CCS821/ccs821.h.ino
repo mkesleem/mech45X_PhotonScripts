@@ -16,6 +16,7 @@
 /*=========================================================================*/
 
     #define MAX_READ_COUNT 5
+    #define MAX_ERROR_COUNT 10
 
 /*=========================================================================
     REGISTERS
@@ -74,7 +75,7 @@ class Adafruit_CCS811 {
     ~Adafruit_CCS811(void) {};
     
     bool start_voc(void);
-    void run_voc(void);
+    bool run_voc(void);
     float get_eCO2_ave(void);
         float get_TVOC_ave(void);
     
@@ -125,16 +126,17 @@ class Adafruit_CCS811 {
 
   private:
     float eCO2_buf[MAX_READ_COUNT];
-        float TVOC_buf[MAX_READ_COUNT];
-        float eCO2_ave;
-        float TVOC_ave;
-        void read_voc(void);
-        void fill_buffer(void);
-        void print_readings(void);
-        void calculate_average_reading(void);
-        void print_average_reading(void);
-        int read_count;
-        bool is_average_taken;
+    float TVOC_buf[MAX_READ_COUNT];
+    float eCO2_ave;
+    float TVOC_ave;
+    void read_voc(void);
+    void fill_buffer(void);
+    void print_readings(void);
+    void calculate_average_reading(void);
+    void print_average_reading(void);
+    int read_count;
+    int error_count;
+    bool is_average_taken;
     
     uint8_t _i2caddr;
     float _tempOffset;

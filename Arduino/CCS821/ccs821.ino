@@ -1,19 +1,32 @@
 #include "CCS821.h"
 
-Adafruit_CCS811 ccs;
-bool voc_started;
+int voc_transistor_control = D6;
+bool start_voc = false;
+
+Adafruit_CCS811 myVOC;
 
 void setup() {
     Serial.begin(9600);
-    voc_started = ccs.start_voc();
+    pinMode(voc_transistor_control,OUTPUT);
+    delay(1000);
+    digitalWrite(voc_transistor_control, HIGH);
+    start_voc = myVOC.start_voc();
+    Serial.println("-----------------------");
+    digitalWrite(voc_transistor_control, LOW);
 }
 
 void loop() {
-    if(voc_started) {
-        ccs.run_voc();
-        Serial.println(ccs.get_eCO2_ave());
-        Serial.println(ccs.get_TVOC_ave());
-        Serial.println(ccs.get_temp_ave());
+if(start_voc) {
+        digitalWrite(voc_transistor_control, HIGH);
+        Serial.println("Reading from VOC Sensor");
+        Serial.println("-----------------------");
+        start_voc = myVOC.run_voc();
+        Serial.println("-----------------------");
+        digitalWrite(voc_transistor_control, LOW);
     }
-    else{Serial.print("EPIC FAIL!");}
+    else if(!start_voc) {
+        Serial.println("Not reading from VOC Sensor");
+        Serial.println("---------------------------");
+        delay(500);
+    }
 }

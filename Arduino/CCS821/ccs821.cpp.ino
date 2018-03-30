@@ -307,7 +307,7 @@ bool Adafruit_CCS811::start_voc(void) {
     }
 }
 
-void Adafruit_CCS811::run_voc(void) {
+bool Adafruit_CCS811::run_voc(void) {
     /*
      * Run the VOC sensor
      * Take measurements until enough measurements have been taken to calculate the average
@@ -315,7 +315,11 @@ void Adafruit_CCS811::run_voc(void) {
      */
     is_average_taken = false;
     read_count = 1;
-    while(is_average_taken == false) {read_voc();}
+    error_count = 1;
+    while(is_average_taken == false  && error_count < MAX_ERROR_COUNT) {read_voc();}
+
+    if(is_average_taken) {return true;}
+    else if(error_count >= MAX_ERROR_COUNT) {return false;}
 }
 
 void Adafruit_CCS811::read_voc(void) {
@@ -332,7 +336,13 @@ void Adafruit_CCS811::read_voc(void) {
             fill_buffer();
             print_readings();
             read_count += 1;
-        } else{Serial.println("ERROR!");}
+            error_count = 1;
+        }
+        else {
+          error_count ++;
+          Serial.print("ERROR #");
+          Serial.println(error_count);
+        }
     }
     calculate_average_reading();
     print_average_reading();
