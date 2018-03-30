@@ -1,11 +1,7 @@
-/*
- * This is the .h file for the SHT35D Tempearture
- * and relative humidity sensor.
- */
-
 #ifndef SHT35D
 #define SHT35D
 #define MAX_READ_COUNT 5
+#define MAX_ERROR_COUNT 5
 #define ADDR_SHT 0x45
 
 #include <Arduino.h>
@@ -184,6 +180,7 @@ private:
     float rh_buf[MAX_READ_COUNT];
     bool is_average_taken;
     int read_count;
+    int error_count;
     float t_average;
     float rh_average;
     

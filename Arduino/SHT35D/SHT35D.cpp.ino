@@ -493,8 +493,11 @@ void ClosedCube_SHT31D::run_sht(void) {
      * take reading from sht until enough values are read to take an average
      */
     is_average_taken = false;
+    error_count = 1;
     read_count = 1;
-    while(!is_average_taken) {read_sht();}
+    while(read_count <= MAX_READ_COUNT && error_count <= MAX_ERROR_COUNT) {
+        read_sht();
+    }
 }
 
 SHT31D ClosedCube_SHT31D::read_sht(void) {
@@ -511,6 +514,28 @@ SHT31D ClosedCube_SHT31D::read_sht(void) {
     delay(500);
 }
 
+SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
+    /*
+     * Prints current reading if no error and not exceeded max count
+     * else print error message
+     */
+    if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT ) {
+        float current_t = result.t;
+        float current_rh = result.rh;
+        
+        if(current_t > 0 && current_rh > 0) {
+            Serial.print(text);
+            Serial.print(" Reading #");
+            Serial.print(read_count);
+            Serial.print(": T=");
+            Serial.print(current_t);
+            Serial.print("C, RH=");
+            Serial.print(current_rh);
+            Serial.println("%");
+        }
+    }
+}
+
 SHT31D ClosedCube_SHT31D::save_to_buffer(SHT31D result) {
     /*
      * Save current t and rh readings to their respective buffers
@@ -521,35 +546,25 @@ SHT31D ClosedCube_SHT31D::save_to_buffer(SHT31D result) {
      * else -> report error, do not save any values
      */
     if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
-        t_buf[read_count - 1] = result.t;
-        rh_buf[read_count - 1] = result.rh;
-        read_count++;
-    }
-    else {
+        float current_t = result.t;
+        float current_rh = result.rh;
+        
+        if(current_t > 0 && current_rh > 0) {
+            t_buf[read_count - 1] = current_t;
+            rh_buf[read_count - 1] = current_rh;    
+            read_count++;
+            error_count = 1;
+        } else {
+            Serial.print("SHT Error count: ");
+            Serial.println(error_count);
+            error_count ++;
+        }
+    } else if (result.error != SHT3XD_NO_ERROR) {
         Serial.print("[ERROR] Code #");
         Serial.println(result.error);
-    }
-}
-
-SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
-    /*
-     * Prints current reading if no error and not exceeded max count
-     * else print error message
-     */
-    if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
-        Serial.print(text);
-        Serial.print(" Reading #");
-        Serial.print(read_count);
-        Serial.print(": T=");
-        Serial.print(result.t);
-        Serial.print("C, RH=");
-        Serial.print(result.rh);
-        Serial.println("%");
-    }
-    else {
-        Serial.print(text);
-        Serial.print(": [ERROR] Code #");
-        Serial.println(result.error);
+        Serial.print("SHT Error count: ");
+        Serial.println(error_count);
+        error_count ++;
     }
 }
 
