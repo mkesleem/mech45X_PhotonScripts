@@ -19,6 +19,7 @@ class MHZ19 {
         int get_co2_ave(void);
         void set_transistor(int pin);
         bool make_sensor_read(void);
+        void calibrate_sensor(void);
     
     private:
         char frame_buffer[MAX_FRAME_LEN];

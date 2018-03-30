@@ -31,8 +31,8 @@ bool MHZ19::check_begin_reading(void) {
     duration = current_time - start_time;
     Serial.println("-----------------");
     Serial.print("CO2 Duration: ");
-    Serial.println("-----------------");
     Serial.println(duration);
+    Serial.println("-----------------");
     
     if(duration >= CO2_START_UP_TIME) {
         Serial.println("Three minutes have elapsed since starting CO2 sensor!");
@@ -63,7 +63,22 @@ bool MHZ19::make_sensor_read(void) {
         digitalWrite(co2_transistor_control, LOW);
         return(true);
     } else{return(false);}
+}
 
+void MHZ19::calibrate_sensor(void) {
+    if(first_time) {
+        function_call_count = 0;
+        begin_timer();
+    }
+
+    if(check_begin_reading()) {
+        Serial.println("---------------------");
+        Serial.print("Function Call Count: ");
+        Serial.println(function_call_count);
+        Serial.println("---------------------");
+        run_sensor();
+        function_call_count ++;
+    }
 }
 
 bool MHZ19::run_sensor(void) {
