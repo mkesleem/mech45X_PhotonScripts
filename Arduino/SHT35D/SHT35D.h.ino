@@ -1,3 +1,8 @@
+/*
+ * This is the .h file for the SHT35D Tempearture
+ * and relative humidity sensor.
+ */
+
 #ifndef SHT35D
 #define SHT35D
 #define MAX_READ_COUNT 5
@@ -182,7 +187,7 @@ private:
     float t_average;
     float rh_average;
     
-    SHT31D save_results(SHT31D result);
+    SHT31D save_to_buffer(SHT31D result);
     SHT31D read_sht(void);
     void calculate_average(void);
     
