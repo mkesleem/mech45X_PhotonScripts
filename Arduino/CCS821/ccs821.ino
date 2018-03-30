@@ -17,12 +17,15 @@ void loop() {
 if(start_voc) {
         Serial.println("Reading from VOC Sensor");
         Serial.println("-----------------------");
-        myVOC.run_voc();
+        start_voc = myVOC.run_voc();
         Serial.println("-----------------------");
     }
     else if(!start_voc) {
-        Serial.println("Not reading from VOC Sensor");
-        Serial.println("---------------------------");
+        start_voc = myVOC.start_voc();
+        Serial.println("Reading from VOC Sensor");
+        Serial.println("-----------------------");
+        start_voc = myVOC.run_voc();
+        Serial.println("-----------------------");
     }
     delay(500);
 }
