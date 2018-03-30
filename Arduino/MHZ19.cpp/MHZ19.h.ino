@@ -6,6 +6,7 @@
 #define NUMBER_OF_VALUES 10
 #define CO2_START_UP_TIME 180
 #define MAX_FRAME_READ_COUNT 40
+#define MAX_FUNCTION_CALL_COUNT 3
 #include "WProgram.h"
 #include "Time.h"
 
@@ -37,6 +38,7 @@ class MHZ19 {
         int co2_ppm;
         int co2_ppm_average;
         int reading_count;
+        int function_call_count;
         int mhz19_buffer[NUMBER_OF_VALUES];
         
         bool run_sensor(void);

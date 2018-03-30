@@ -16,6 +16,14 @@ void setup() {
 
 void loop() {
     start_co2 = myCO2.make_sensor_read();
+    
+    if(start_co2) {
+        Serial.println("Done reading from CO2 sensor.");
+    }
+    else if(!start_co2) {
+        Serial.println("Not done reading from CO2 sensor.");
+    }
+    
     delay(500);
 }
 
