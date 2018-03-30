@@ -2,8 +2,8 @@
 #include "CALCULATE_MRT.h"
 mrt_and_ot my_MRT_OT;
 
-float T_g;
-float T_a;
+float T_g; // T_g is from globe thermometer
+float T_a; // T_a is from SHT35D
 
 void setup() {
     T_g = 25.0;

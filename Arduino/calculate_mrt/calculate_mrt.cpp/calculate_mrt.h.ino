@@ -1,3 +1,8 @@
+/*
+ * This is the .h file for calculating MRT and OT
+ * This code was written entirely by Team 26
+ * using formulas found in Literature.
+ */
 #ifndef CALCULATE_MRT_H
 #define CALCULATE_MRT_H
 
