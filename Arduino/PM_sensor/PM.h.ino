@@ -13,14 +13,14 @@
 #define SLEEP_TIME 912
 #define MAX_READ_COUNT 5
 #define MAX_FRAME_SYNC_COUNT 40
-#define PMS_START_UP_TIME 180
+#define PMS_START_UP_TIME 10
 #define MAX_FUNCTION_CALL_COUNT 3
 
 class PM_7003 {
 public:
     PM_7003();
     virtual ~PM_7003();
-    int getpm(void);
+    int get_pm_ave(void);
     void set_transistor(int ground_pin, int tx_pin);
     bool make_sensor_read(void);
     void calibrate_sensor(void);

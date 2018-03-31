@@ -31,8 +31,11 @@ void PM_7003::begin_timer(void) {
     digitalWrite(pm_ground_control, HIGH);
     digitalWrite(pm_tx_control, HIGH);
     start_time = now();
-    Serial.print("Start time: ");
+    Serial.println("-------------------");
+    Serial.print("PMS Start time: ");
     Serial.println(start_time);
+    Serial.println("-------------------");
+    pm_avgpm2_5 = -1;
     first_time = false;
 }
 
@@ -322,7 +325,7 @@ void PM_7003::print_messages(void){
     delay(500);    
 }
 
-int PM_7003::getpm(void) {
+int PM_7003::get_pm_ave(void) {
     return pm_avgpm2_5;
 }
 
