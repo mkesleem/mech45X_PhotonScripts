@@ -159,11 +159,13 @@ void loop() {
             T_ot = -1;
         }
         
+        /*
         if(read_from_pm){pm_ave = myPM.get_pm_ave();}
         else {pm_ave = -1;}
         
         if(read_from_co2){co2_ave = myCO2.get_co2_ave();}
         else{co2_ave = -1;}
+        */
         
         if(start_voc){
             voc_eCO2_ave = myVOC.get_eCO2_ave();
@@ -172,16 +174,20 @@ void loop() {
             voc_eCO2_ave = -1;
             voc_TVOC_ave = -1;
         }
+        
+        pm_ave = myPM.get_pm_ave();
+        co2_ave = myCO2.get_co2_ave();
+        myCO2.reset_co2_ave();
+        myPM.reset_pm_ave();
 
-        sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%f\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%i\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        sprintf(data,"{ \"Mean Radiant Temperature\": \"%3.2f\", \"Operating Temperature\": \"%3.2f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%4.2f\", \"TVOC\": \"%4.2f\",\"PM 2_5\": \"%i\", \"Air Temperature\": \"%3.2f\",\"Relative Humidity of Air\": \"%3.2f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
         Serial.println("------------------------");
         Serial.println("Data:");
         Serial.println("------------------------");
         Serial.println(data);
         Serial.println("------------------------");
         
-        Particle.publish("IEQ Data", data, PRIVATE);
-           
+        Particle.publish("IEQ Final Prototype", data, PRIVATE);
     }
 }
 
