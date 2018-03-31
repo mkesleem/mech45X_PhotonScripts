@@ -122,10 +122,9 @@ bool PM_7003::run_PM_sensor(void) {
     read_count = 1;
     done_reading = false;
     frame_sync_count = 0;
-    pm_avgpm2_5 = 0;
     while(!done_reading && frame_sync_count < MAX_FRAME_SYNC_COUNT) {
         drain_serial();
-        delay(500);
+        delay(250);
         read_sensor();
     }
     
@@ -187,7 +186,7 @@ void PM_7003::frame_sync(void) {
             Serial.println(current_byte, HEX);
             Serial.print("frame count: ");
             Serial.println(frame_sync_count);
-            delay(500);
+            delay(250);
             
             if(frame_sync_count >= MAX_FRAME_SYNC_COUNT) {
                 Serial.println("------------------------");
@@ -219,13 +218,16 @@ void PM_7003::read_sensor(void) {
 
         if (frame_count >= frame_length && read_count <= MAX_READ_COUNT) {
             print_messages();
-            pm_avgpm2_5 = pm_avgpm2_5 + pm2_5;
             read_count++;
             break;
         }
     }
     
     if (read_count > MAX_READ_COUNT) {
+        pm_avgpm2_5 = 0;
+        
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm2_5 += pm2_5_buf[k];}
+        
         float pm_avg_f = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
         int pm_avg_i = static_cast<int>(pm_avg_f);
         pm_avgpm2_5 = pm_avg_i;
@@ -319,10 +321,15 @@ void PM_7003::print_messages(void){
         
     float pm2_5_f = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
     int pm_2_5_i = static_cast<int>(pm2_5_f);
-    pm2_5 = pm_2_5_i;
+    pm2_5_buf[read_count-1] = pm_2_5_i;
     Serial.println(print_buffer);
     Serial.println("-----------------------");
-    delay(500);    
+    Serial.println("-----------------------");
+    Serial.print("PM 2.5 Reading #");
+    Serial.print(read_count);
+    Serial.println(": ");
+    Serial.println(pm2_5_buf[read_count-1]);
+    Serial.println("-----------------------");
 }
 
 int PM_7003::get_pm_ave(void) {

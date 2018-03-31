@@ -39,7 +39,7 @@ private:
     int frame_length;
     
     int pm_avgpm2_5;
-    int pm2_5;
+    int pm2_5_buf[MAX_READ_COUNT];
     
     bool done_reading;
     int read_count;
