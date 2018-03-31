@@ -19,6 +19,7 @@ void MHZ19::set_transistor(int pin) {
 }
 
 void MHZ19::begin_timer(void) {
+    co2_ppm_average = -1;
     digitalWrite(co2_transistor_control, HIGH);
     start_time = now();
     Serial.print("Start time: ");
@@ -60,6 +61,7 @@ bool MHZ19::make_sensor_read(void) {
     
     if(function_call_count >= MAX_FUNCTION_CALL_COUNT) {
         first_time = true;
+        co2_ppm_average = -1;
         digitalWrite(co2_transistor_control, LOW);
         return(true);
     } else{return(false);}
