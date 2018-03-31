@@ -172,22 +172,15 @@ void loop() {
             voc_eCO2_ave = -1;
             voc_TVOC_ave = -1;
         }
-        
-        Serial.println("----------------------------");
-        Serial.print("double check pm value: ");
-        Serial.println(pm_ave);
-        Serial.println("----------------------------");
-        
-        
-        //sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
-        //sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+
         sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%f\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%i\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
         Serial.println("------------------------");
         Serial.println("Data:");
         Serial.println("------------------------");
         Serial.println(data);
         Serial.println("------------------------");
-        //Particle.publish("IEQ Data", data, PRIVATE);
+        
+        Particle.publish("IEQ Data", data, PRIVATE);
            
     }
 }
