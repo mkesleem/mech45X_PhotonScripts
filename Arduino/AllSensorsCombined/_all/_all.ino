@@ -4,6 +4,7 @@
 #include "SHT35D.h"
 #include "MRT.h"
 #include "PM.h"
+#include "Time.h"
 #include <Wire.h>
 
 // creae instances of objects
@@ -25,13 +26,16 @@ bool start_sht = false;
 bool start_pm = false;
 bool start_mrt = false;
 
+bool read_from_co2 = true;
+bool read_from_pm = false;
+
 // average reading values
 int co2_ave = -1;
 float sht_rh_ave = -1;
 float sht_t_ave = -1;
 float voc_eCO2_ave = -1;
 float voc_TVOC_ave = -1;
-float pm_ave = -1;
+int pm_ave = -1;
 float T_g = -1;
 float T_a = -1;
 float T_mrt = -1;
@@ -41,10 +45,8 @@ bool publish_data = true; // should we publish data?
 
 // pin numbers for pm and co2 sensors
 int pm_transistor_control = A4;
+int pm_tx_transistor_control = A5;
 int co2_transistor_control = A3;
-int mrt_transistor_control = D3;
-int voc_transistor_control = D4;
-int sht_transistor_control = D5;
 
 void setup() {
     /*
@@ -54,40 +56,18 @@ void setup() {
      */
     Serial.begin(9600);
     Wire.begin();
-    pinMode(pm_transistor_control,OUTPUT);
-    pinMode(co2_transistor_control,OUTPUT);
-    pinMode(mrt_transistor_control,OUTPUT);
-    pinMode(voc_transistor_control,OUTPUT);
-    pinMode(sht_transistor_control,OUTPUT);
     Serial.println("Initializing");
     
-    Serial.println("Trying to start CO2 sensor");
-    delay(1000);
-    digitalWrite(co2_transistor_control, HIGH);
-    start_co2 = myCO2.start_sensor();
-    Serial.println("-----------------------");
-    digitalWrite(co2_transistor_control, LOW);
+    myCO2.set_transistor(co2_transistor_control);
+    myPM.set_transistor(pm_transistor_control, pm_tx_transistor_control);
     
-    digitalWrite(mrt_transistor_control, HIGH);
     start_mrt = myMRT.start_mrt();
     Serial.println("-----------------------");
+
     start_sht = mySHT.start_sht();
     Serial.println("-----------------------");
-    digitalWrite(mrt_transistor_control, LOW);
     
-    digitalWrite(voc_transistor_control, HIGH);
     start_voc = myVOC.start_voc();
-    Serial.println("-----------------------");
-    digitalWrite(voc_transistor_control, LOW);
-
-    Serial.println("Trying to start PM sensor");
-    digitalWrite(pm_transistor_control, HIGH);
-    delay(1000);
-    start_pm = myPM.run_PM_sensor();
-    digitalWrite(pm_transistor_control, LOW);
-    
-    if(start_pm){Serial.println("Successfully started PM sensor");}
-    else if(!start_pm){Serial.println("Failed to start PM sensor");}
     Serial.println("-----------------------");
 }
 
@@ -97,67 +77,54 @@ void loop() {
      * If the sensor has not been started, print error message
      * After all values have been read, prepare to publish data
      */
-    if(start_co2) {
-        digitalWrite(co2_transistor_control, HIGH);
-        delay(1800);
-        start_co2 = myCO2.run_sensor();
-        digitalWrite(co2_transistor_control, LOW);
-        delay(1000);
+    if(read_from_co2) {
+        start_co2 = myCO2.make_sensor_read();
+        start_pm = false;
+        
+        if(start_co2) {
+            read_from_co2 = false;
+            read_from_pm = true;
+        }
+    }
+    else if(read_from_pm) {
+        start_pm = myPM.make_sensor_read();
+        start_co2 = false;
+        
+        if(start_pm) {
+            read_from_pm = false;
+            read_from_co2 = true;
+        }
     }
     
-    if(start_pm) {
-        Serial.println("Reading from PMS Sensor");
-        Serial.println("-----------------------");
-        digitalWrite(pm_transistor_control, HIGH);
-        delay(10000);
-        start_pm = myPM.run_PM_sensor();
-        digitalWrite(pm_transistor_control, LOW);
-        delay(500);
-    }
-    else if(!start_pm) {
-        Serial.println("Not reading from PMS Sensor");
-        Serial.println("---------------------------");
-        delay(500);
-    }
-
-    if(start_mrt) {
-        digitalWrite(mrt_transistor_control, HIGH);
-        myMRT.run_mrt();
-        digitalWrite(mrt_transistor_control, LOW);
-        delay(500);
-    }
-    else if(!start_mrt) {
-        Serial.println("Not reading from MRT Sensor");
-        Serial.println("---------------------------");
-        delay(500);
-    }
+    start_mrt = myMRT.run_mrt();
     
     if(start_sht) {
-        digitalWrite(sht_transistor_control, HIGH);
         Serial.println("Reading from SHT Sensor");
         Serial.println("-----------------------");
-        mySHT.run_sht();
+        start_sht = mySHT.run_sht();
         Serial.println("-----------------------");
-        digitalWrite(sht_transistor_control, LOW);
     }
     else if(!start_sht) {
+        Serial.println("---------------------------");
         Serial.println("Not reading from SHT Sensor");
         Serial.println("---------------------------");
-        delay(500);
+        Serial.println("Tring to start SHT");
+        start_sht = mySHT.start_sht();
+        Serial.println("-----------------------");
     }
     
     if(start_voc) {
-        digitalWrite(voc_transistor_control, HIGH);
         Serial.println("Reading from VOC Sensor");
         Serial.println("-----------------------");
-        myVOC.run_voc();
+        start_voc = myVOC.run_voc();
         Serial.println("-----------------------");
-        digitalWrite(voc_transistor_control, LOW);
     }
     else if(!start_voc) {
-        Serial.println("Not reading from VOC Sensor");
-        Serial.println("---------------------------");
-        delay(500);
+        start_voc = myVOC.start_voc();
+        Serial.println("Reading from VOC Sensor");
+        Serial.println("-----------------------");
+        start_voc = myVOC.run_voc();
+        Serial.println("-----------------------");
     }
     
     if(publish_data) {
@@ -192,10 +159,10 @@ void loop() {
             T_ot = -1;
         }
         
-        if(start_pm){pm_ave = myPM.getpm();}
+        if(read_from_pm){pm_ave = myPM.get_pm_ave();}
         else {pm_ave = -1;}
         
-        if(start_co2){co2_ave = myCO2.get_co2_ave();}
+        if(read_from_co2){co2_ave = myCO2.get_co2_ave();}
         else{co2_ave = -1;}
         
         if(start_voc){
@@ -206,10 +173,20 @@ void loop() {
             voc_TVOC_ave = -1;
         }
         
+        Serial.println("----------------------------");
+        Serial.print("double check pm value: ");
+        Serial.println(pm_ave);
+        Serial.println("----------------------------");
+        
         
         //sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"VOC Equivalent CO2 Concentration\": \"%i\",\"TVOC\": \"%i\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
-        sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        //sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"Globe Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%f\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, T_g, co2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        sprintf(data,"{ \"Mean Radiant Temperature\": \"%f\", \"Operating Temperature\": \"%f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%f\", \"TVOC\": \"%f\",\"PM 2.5 (Counts/m^3)\": \"%i\", \"Air Temperature\": \"%f\",\"Relative Humidity of Air\": \"%f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+        Serial.println("------------------------");
+        Serial.println("Data:");
+        Serial.println("------------------------");
         Serial.println(data);
+        Serial.println("------------------------");
         //Particle.publish("IEQ Data", data, PRIVATE);
            
     }
