@@ -6,6 +6,7 @@ PM_7003::PM_7003() {
     packetdata.frame_length = MAX_FRAME_LENGTH;
     frame_length = MAX_FRAME_LENGTH;
     first_time = true;
+    pm_avgpm2_5 = -1;
 }
 
 PM_7003::~PM_7003() {
@@ -85,6 +86,7 @@ bool PM_7003::make_sensor_read(void) {
         first_time = true;
         digitalWrite(pm_ground_control, LOW);
         digitalWrite(pm_tx_control, LOW);
+        pm_avgpm2_5 = -1;
         return(true);
     } else{return(false);}
 }
@@ -124,7 +126,7 @@ bool PM_7003::run_PM_sensor(void) {
     frame_sync_count = 0;
     while(!done_reading && frame_sync_count < MAX_FRAME_SYNC_COUNT) {
         drain_serial();
-        delay(250);
+        delay(750);
         read_sensor();
     }
     
@@ -170,6 +172,7 @@ void PM_7003::frame_sync(void) {
             frame_buffer[frame_count] = current_byte;
             packetdata.start_frame[0] = current_byte;
             byte_sum = current_byte;
+            frame_sync_count = 1;
             frame_count = 1;
         }
         else if(current_byte == SECOND_BYTE && frame_count == 1){
@@ -177,6 +180,7 @@ void PM_7003::frame_sync(void) {
             packetdata.start_frame[1] = current_byte;
             byte_sum = byte_sum + current_byte;
             frame_count = 2;
+            frame_sync_count = 1;
             sync_state = true;
         }
         else{
@@ -186,7 +190,7 @@ void PM_7003::frame_sync(void) {
             Serial.println(current_byte, HEX);
             Serial.print("frame count: ");
             Serial.println(frame_sync_count);
-            delay(250);
+            delay(750);
             
             if(frame_sync_count >= MAX_FRAME_SYNC_COUNT) {
                 Serial.println("------------------------");
