@@ -96,7 +96,7 @@ bool ClosedCube_Si7051::run_mrt(void) {
             delay(1000);
         } else{
             T_buf[read_count - 1] = readTemperature();
-            Serial.print("Reading #");
+            Serial.print("Globe Thermometer Reading #");
             Serial.print(read_count);
             Serial.print(": Tg is: ");
             Serial.println(T_buf[read_count - 1]);

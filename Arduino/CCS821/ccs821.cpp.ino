@@ -362,7 +362,7 @@ void Adafruit_CCS811::print_readings(void) {
     /*
      * Print readings
      */
-    Serial.print("Reading #:");
+    Serial.print("VOC Reading #:");
     Serial.print(read_count);
     Serial.print(", CO2: ");
     Serial.print(geteCO2());

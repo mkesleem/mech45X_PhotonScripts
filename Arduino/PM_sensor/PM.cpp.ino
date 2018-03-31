@@ -184,6 +184,12 @@ void PM_7003::frame_sync(void) {
         }
         else{
             frame_sync_count++;
+            
+            if(frame_sync_count >= 10) {
+                Serial.print("frame count: ");
+                Serial.println(frame_sync_count);
+            }
+            
             if(debug) {
                 Serial.println("frame is syncing");
                 Serial.print("Current character: ");

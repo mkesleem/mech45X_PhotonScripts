@@ -526,8 +526,8 @@ SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
         float current_rh = result.rh;
         
         if(current_t > 0 && current_rh > 0) {
-            Serial.print(text);
-            Serial.print(" Reading #");
+            //Serial.print(text);
+            Serial.print("SHT Reading #");
             Serial.print(read_count);
             Serial.print(": T=");
             Serial.print(current_t);

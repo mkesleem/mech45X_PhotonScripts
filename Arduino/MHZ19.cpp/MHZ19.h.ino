@@ -4,9 +4,9 @@
 #define MHZ19_FIRST_BYTE 0x86
 #define MAX_FRAME_LEN 9
 #define NUMBER_OF_VALUES 5
-#define CO2_START_UP_TIME 10
+#define CO2_START_UP_TIME 210
 #define MAX_FRAME_READ_COUNT 40
-#define MAX_FUNCTION_CALL_COUNT 3
+#define MAX_FUNCTION_CALL_COUNT 1
 #include "WProgram.h"
 #include "Time.h"
 

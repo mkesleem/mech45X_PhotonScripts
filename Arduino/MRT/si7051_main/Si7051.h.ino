@@ -2,7 +2,7 @@
 
 #define _CLOSEDCUBE_SI7051_h
 #define MAX_READ_COUNT 5
-#define MAX_ERROR_COUNT 30
+#define MAX_ERROR_COUNT 40
 #define ADDR_MRT 0x40
 #define DEFAULT_AVERAGE 128
 #include <Arduino.h>
