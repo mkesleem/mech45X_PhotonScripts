@@ -485,7 +485,7 @@ bool ClosedCube_SHT31D::start_sht(void) {
     }
 }
 
-void ClosedCube_SHT31D::run_sht(void) {
+bool ClosedCube_SHT31D::run_sht(void) {
     /*
      * Run SHT sensor
      * start read_count from 1
@@ -498,6 +498,8 @@ void ClosedCube_SHT31D::run_sht(void) {
     while(read_count <= MAX_READ_COUNT && error_count <= MAX_ERROR_COUNT) {
         read_sht();
     }
+    
+    return(is_average_taken);
 }
 
 SHT31D ClosedCube_SHT31D::read_sht(void) {
@@ -511,7 +513,7 @@ SHT31D ClosedCube_SHT31D::read_sht(void) {
     printResult("Periodic Mode", my_result);
     save_to_buffer(my_result);
     calculate_average();
-    delay(500);
+    delay(250);
 }
 
 SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {

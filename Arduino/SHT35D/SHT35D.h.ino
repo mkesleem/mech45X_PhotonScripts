@@ -139,7 +139,7 @@ public:
     ClosedCube_SHT31D();
 
     bool start_sht(void);
-    void run_sht(void);
+    bool run_sht(void);
     float get_t_ave(void);
     float get_rh_ave(void);
     

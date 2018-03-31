@@ -17,13 +17,16 @@ void loop() {
     if(start_sht) {
         Serial.println("Reading from SHT Sensor");
         Serial.println("-----------------------");
-        mySHT.run_sht();
+        start_sht = mySHT.run_sht();
         Serial.println("-----------------------");
     }
     else if(!start_sht) {
         Serial.println("---------------------------");
         Serial.println("Not reading from SHT Sensor");
         Serial.println("---------------------------");
+        Serial.println("Tring to start SHT");
+        start_sht = mySHT.start_sht();
+        Serial.println("-----------------------");
     }
     delay(500);
 }
