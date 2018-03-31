@@ -93,6 +93,7 @@ bool ClosedCube_Si7051::run_mrt(void) {
             Serial.println(current_T);
             Serial.println("------------------------------------------------");
             error_count ++;
+            delay(1000);
         } else{
             T_buf[read_count - 1] = readTemperature();
             Serial.print("Reading #");
@@ -100,10 +101,9 @@ bool ClosedCube_Si7051::run_mrt(void) {
             Serial.print(": Tg is: ");
             Serial.println(T_buf[read_count - 1]);
             read_count ++;
-            error_count = 1;    
+            error_count = 1;
+            delay(250);
         }
-        
-        delay(250);
     }
     
     if(read_count > MAX_READ_COUNT) {

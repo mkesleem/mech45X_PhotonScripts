@@ -86,7 +86,6 @@ bool PM_7003::make_sensor_read(void) {
         first_time = true;
         digitalWrite(pm_ground_control, LOW);
         digitalWrite(pm_tx_control, LOW);
-        pm_avgpm2_5 = -1;
         return(true);
     } else{return(false);}
 }
@@ -185,11 +184,14 @@ void PM_7003::frame_sync(void) {
         }
         else{
             frame_sync_count++;
-            Serial.println("frame is syncing");
-            Serial.print("Current character: ");
-            Serial.println(current_byte, HEX);
-            Serial.print("frame count: ");
-            Serial.println(frame_sync_count);
+            if(debug) {
+                Serial.println("frame is syncing");
+                Serial.print("Current character: ");
+                Serial.println(current_byte, HEX);
+                Serial.print("frame count: ");
+                Serial.println(frame_sync_count);
+            }
+
             delay(750);
             
             if(frame_sync_count >= MAX_FRAME_SYNC_COUNT) {
@@ -307,10 +309,6 @@ void PM_7003::print_messages(void){
     /*
      * Print messages to string and Serial screen
      */
-    Serial.println("-----------------------");
-    Serial.print("PMS 7003 - Reading #");
-    Serial.println(read_count);
-    Serial.println("-----------------------");
     sprintf(print_buffer, ", %02x, %02x, %04x, ",
         packetdata.start_frame[0], packetdata.start_frame[1], packetdata.frame_length);
     sprintf(print_buffer, "%s%04d, %04d, %04d, ", print_buffer,
@@ -326,17 +324,22 @@ void PM_7003::print_messages(void){
     float pm2_5_f = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
     int pm_2_5_i = static_cast<int>(pm2_5_f);
     pm2_5_buf[read_count-1] = pm_2_5_i;
-    Serial.println(print_buffer);
-    Serial.println("-----------------------");
-    Serial.println("-----------------------");
+
+    if(debug) {
+        Serial.println(print_buffer);
+    }
+    
     Serial.print("PM 2.5 Reading #");
     Serial.print(read_count);
-    Serial.println(": ");
+    Serial.print(": ");
     Serial.println(pm2_5_buf[read_count-1]);
-    Serial.println("-----------------------");
 }
 
 int PM_7003::get_pm_ave(void) {
     return pm_avgpm2_5;
+}
+
+void PM_7003::reset_pm_ave(void) {
+    pm_avgpm2_5 = -1;
 }
 

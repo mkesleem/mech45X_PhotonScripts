@@ -3,8 +3,8 @@
 #define MHZ19_ZEROTH_BYTE 0xFF
 #define MHZ19_FIRST_BYTE 0x86
 #define MAX_FRAME_LEN 9
-#define NUMBER_OF_VALUES 10
-#define CO2_START_UP_TIME 180
+#define NUMBER_OF_VALUES 5
+#define CO2_START_UP_TIME 10
 #define MAX_FRAME_READ_COUNT 40
 #define MAX_FUNCTION_CALL_COUNT 3
 #include "WProgram.h"
@@ -20,10 +20,13 @@ class MHZ19 {
         void set_transistor(int pin);
         bool make_sensor_read(void);
         void calibrate_sensor(void);
+        void reset_co2_ave(void);
     
     private:
         char frame_buffer[MAX_FRAME_LEN];
         const uint8_t mhz19_read_command[MAX_FRAME_LEN] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};;
+        
+        bool debug = false;
         
         bool sync_state;
         bool does_sensor_work;
