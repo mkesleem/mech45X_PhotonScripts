@@ -29,6 +29,12 @@ bool start_mrt = false;
 bool read_from_co2 = true;
 bool read_from_pm = false;
 
+bool finished_co2 = false;
+bool finished_pm = false;
+bool finished_other_sensors = false;
+bool finished_mrt_ot = false;
+bool finished_voc = false;
+
 // average reading values
 int co2_ave = -1;
 float sht_rh_ave = -1;
@@ -61,6 +67,8 @@ void setup() {
     myCO2.set_transistor(co2_transistor_control);
     myPM.set_transistor(pm_transistor_control, pm_tx_transistor_control);
     
+    myCO2.make_sensor_read();
+    
     start_mrt = myMRT.start_mrt();
     Serial.println("-----------------------");
 
@@ -69,6 +77,10 @@ void setup() {
     
     start_voc = myVOC.start_voc();
     Serial.println("-----------------------");
+    Serial.println("30 second delay");
+    Serial.println("-----------------------");
+    delay(30000);
+    
 }
 
 void loop() {
@@ -84,6 +96,7 @@ void loop() {
         if(start_co2) {
             read_from_co2 = false;
             read_from_pm = true;
+            finished_co2 = true;
         }
     }
     else if(read_from_pm) {
@@ -93,6 +106,7 @@ void loop() {
         if(start_pm) {
             read_from_pm = false;
             read_from_co2 = true;
+            finished_pm = true;
         }
     }
     
@@ -126,68 +140,80 @@ void loop() {
         start_voc = myVOC.run_voc();
         Serial.println("-----------------------");
     }
-    
-    if(publish_data) {
-        char data[1000];
-        if(start_mrt && start_sht){
-            T_g = myMRT.get_MRT_ave();
-            T_a = mySHT.get_t_ave();
-            sht_rh_ave = mySHT.get_rh_ave();
-            my_MRT_OT.calculate_mrt_and_ot(T_g, T_a);
-            T_mrt = my_MRT_OT.get_mrt();
-            T_ot = my_MRT_OT.get_ot();
-        }
-        else if(start_mrt && !start_sht) {
-            T_g = myMRT.get_MRT_ave();
-            T_a = -1;
-            sht_rh_ave = -1;
-            T_mrt = -1;
-            T_ot = -1;
-        }
-        else if(!start_mrt && start_sht) {
-            T_g = -1;
-            T_a = mySHT.get_t_ave();
-            sht_rh_ave = mySHT.get_rh_ave();
-            T_mrt = -1;
-            T_ot = -1;
-        }
-        else {
-            T_g = -1;
-            T_a = -1;
-            sht_rh_ave = -1;
-            T_mrt = -1;
-            T_ot = -1;
+
+    if(finished_co2 && !finished_other_sensors) {
+        finished_other_sensors = true;
+
+        if(!finished_mrt_ot) {
+            if(start_mrt && start_sht){
+                T_g = myMRT.get_MRT_ave();
+                T_a = mySHT.get_t_ave();
+                sht_rh_ave = mySHT.get_rh_ave();
+                my_MRT_OT.calculate_mrt_and_ot(T_g, T_a);
+                T_mrt = my_MRT_OT.get_mrt();
+                T_ot = my_MRT_OT.get_ot();
+                finished_mrt_ot = true;
+            }
+            else if(start_mrt && !start_sht) {
+                T_g = myMRT.get_MRT_ave();
+                T_a = -1;
+                sht_rh_ave = -1;
+                T_mrt = -1;
+                T_ot = -1;
+            }
+            else if(!start_mrt && start_sht) {
+                T_g = -1;
+                T_a = mySHT.get_t_ave();
+                sht_rh_ave = mySHT.get_rh_ave();
+                T_mrt = -1;
+                T_ot = -1;
+            }
+            else {
+                T_g = -1;
+                T_a = -1;
+                sht_rh_ave = -1;
+                T_mrt = -1;
+                T_ot = -1;
+            }
         }
         
-        /*
-        if(read_from_pm){pm_ave = myPM.get_pm_ave();}
-        else {pm_ave = -1;}
-        
-        if(read_from_co2){co2_ave = myCO2.get_co2_ave();}
-        else{co2_ave = -1;}
-        */
-        
-        if(start_voc){
+        if(start_voc && !finished_voc){
             voc_eCO2_ave = myVOC.get_eCO2_ave();
             voc_TVOC_ave = myVOC.get_TVOC_ave();
+            finished_voc = true;
         } else {
             voc_eCO2_ave = -1;
             voc_TVOC_ave = -1;
         }
-        
-        pm_ave = myPM.get_pm_ave();
-        co2_ave = myCO2.get_co2_ave();
-        myCO2.reset_co2_ave();
-        myPM.reset_pm_ave();
 
-        sprintf(data,"{ \"Mean Radiant Temperature\": \"%3.2f\", \"Operating Temperature\": \"%3.2f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%4.2f\", \"TVOC\": \"%4.2f\",\"PM 2_5\": \"%i\", \"Air Temperature\": \"%3.2f\",\"Relative Humidity of Air\": \"%3.2f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
-        Serial.println("------------------------");
-        Serial.println("Data:");
-        Serial.println("------------------------");
-        Serial.println(data);
-        Serial.println("------------------------");
+        co2_ave = myCO2.get_co2_ave();
         
-        Particle.publish("IEQ Final Prototype", data, PRIVATE);
+        if(finished_mrt_ot && finished_voc) {
+            finished_other_sensors = true;
+        }
+    }
+
+    if(finished_co2 && finished_pm) {
+        pm_ave = myPM.get_pm_ave();
+        finished_co2 = false;
+        finished_pm = false;
+        finished_mrt_ot = false;
+        finished_voc = false;
+        finished_other_sensors = false;
+
+        if(publish_data) {
+            char data[1000];
+            sprintf(data,"{ \"Mean Radiant Temperature\": \"%3.2f\", \"Operating Temperature\": \"%3.2f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%4.2f\", \"TVOC\": \"%4.2f\",\"PM 2_5\": \"%i\", \"Air Temperature\": \"%3.2f\",\"Relative Humidity of Air\": \"%3.2f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+            Serial.println("------------------------");
+            Serial.print("Data:");
+            Serial.println(data);
+            Serial.println("------------------------");
+            
+            Particle.publish("IEQ Final Prototype", data, PRIVATE);
+    
+            myCO2.reset_co2_ave();
+            myPM.reset_pm_ave();
+        }
     }
 }
 
