@@ -20,7 +20,7 @@ class PM_7003 {
 public:
     PM_7003();
     virtual ~PM_7003();
-    int get_pm_ave(void);
+    float get_pm_ave(void);
     void set_transistor(int ground_pin, int tx_pin);
     bool make_sensor_read(void);
     void calibrate_sensor(void);

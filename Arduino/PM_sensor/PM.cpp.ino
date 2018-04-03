@@ -246,12 +246,9 @@ void PM_7003::read_sensor(void) {
         float pm_avg175_f = 1.941*pow(10,-12)*pow((pm_avgpm0_75/MAX_READ_COUNT),4) +-2.409*pow(10,-8)*pow((pm_avgpm0_75/MAX_READ_COUNT),3) + 0.0001295*pow((pm_avgpm0_75/MAX_READ_COUNT),2)+ -0.02592*(pm_avgpm0_75/MAX_READ_COUNT)+ 30.16;
         float pm_avg_fvol = pm_avg04_f*4/3*3.14159265359*pow((400/2*pow(10,-9)),3)+pm_avg075_f*4/3*3.14159265359*pow((750/2*pow(10,-9)),3)+pm_avg175_f*4/3*3.14159265359*pow((1750/2*pow(10,-9)),3);
         float pm_avg_fmass = pm_avg_fvol*1.65*pow(100,3)*10*1000*1000000;
-        
-        
-        int pm_avg_i = static_cast<int>(pm_avg_fmass);
+                
         pm_avgpm2_5 = pm_avg_fmass;
         done_reading = true;
-        
     }
 }
 
@@ -337,9 +334,6 @@ void PM_7003::print_messages(void){
     float pm0_4_f = packetdata.countPM0_3um - packetdata.countPM0_5um;
     float pm0_75_f = packetdata.countPM0_5um - packetdata.countPM1_0um;
     float pm1_75_f = packetdata.countPM1_0um - packetdata.countPM2_5um;
-    int pm_1_75_i = static_cast<int>(pm1_75_f);
-    int pm_0_75_i = static_cast<int>(pm0_75_f);
-    int pm_0_4_i = static_cast<int>(pm0_4_f);
     pm1_75_buf[read_count-1] = pm1_75_f;
     pm0_75_buf[read_count-1] = pm0_75_f;
     pm0_4_buf[read_count-1] = pm0_4_f;
@@ -354,11 +348,11 @@ void PM_7003::print_messages(void){
     Serial.println(pm1_75_buf[read_count-1]);
 }
 
-int PM_7003::get_pm_ave(void) {
+float PM_7003::get_pm_ave(void) {
     return pm_avgpm2_5;
 }
 
 void PM_7003::reset_pm_ave(void) {
-    pm_avgpm2_5 = -1;
+    pm_avgpm2_5 = -1.0;
 }
 

@@ -36,23 +36,28 @@ bool finished_mrt_ot = false;
 bool finished_voc = false;
 
 // average reading values
-int co2_ave = -1;
-float sht_rh_ave = -1;
-float sht_t_ave = -1;
-float voc_eCO2_ave = -1;
-float voc_TVOC_ave = -1;
-int pm_ave = -1;
-float T_g = -1;
-float T_a = -1;
-float T_mrt = -1;
-float T_ot = -1;
+int co2_ave = -1.0;
+float sht_rh_ave = -1.0;
+float sht_t_ave = -1.0;
+float voc_eCO2_ave = -1.0;
+float voc_TVOC_ave = -1.0;
+float pm_ave = -1.0;
+float T_g = -1.0;
+float T_a = -1.0;
+float T_mrt = -1.0;
+float T_ot = -1.0;
 
 bool publish_data = true; // should we publish data?
 
-// pin numbers for pm and co2 sensors
+// pin numbers for co2 and pm sensors
+int co2_transistor_control = A3;
 int pm_transistor_control = A4;
 int pm_tx_transistor_control = A5;
-int co2_transistor_control = A3;
+
+// fan variables
+int fan = A0;
+int i = 2000; //puts the fan on about 50%
+int freq = 60; //PWM frequency
 
 void setup() {
     /*
@@ -63,6 +68,11 @@ void setup() {
     Serial.begin(9600);
     Wire.begin();
     Serial.println("Initializing");
+    
+    /*    
+    pinMode(fan,OUTPUT);
+    analogWriteResolution(fan,12); //this sets resolution to 12bit (0-4095)
+    */
     
     myCO2.set_transistor(co2_transistor_control);
     myPM.set_transistor(pm_transistor_control, pm_tx_transistor_control);
@@ -89,6 +99,8 @@ void loop() {
      * If the sensor has not been started, print error message
      * After all values have been read, prepare to publish data
      */
+    //analogWrite(fan,i,freq);
+    
     if(read_from_co2) {
         start_co2 = myCO2.make_sensor_read();
         start_pm = false;
@@ -156,24 +168,24 @@ void loop() {
             }
             else if(start_mrt && !start_sht) {
                 T_g = myMRT.get_MRT_ave();
-                T_a = -1;
-                sht_rh_ave = -1;
-                T_mrt = -1;
-                T_ot = -1;
+                T_a = -1.0;
+                sht_rh_ave = -1.0;
+                T_mrt = -1.0;
+                T_ot = -1.0;
             }
             else if(!start_mrt && start_sht) {
-                T_g = -1;
+                T_g = -1.0;
                 T_a = mySHT.get_t_ave();
                 sht_rh_ave = mySHT.get_rh_ave();
-                T_mrt = -1;
-                T_ot = -1;
+                T_mrt = -1.0;
+                T_ot = -1.0;
             }
             else {
-                T_g = -1;
-                T_a = -1;
-                sht_rh_ave = -1;
-                T_mrt = -1;
-                T_ot = -1;
+                T_g = -1.0;
+                T_a = -1.0;
+                sht_rh_ave = -1.0;
+                T_mrt = -1.0;
+                T_ot = -1.0;
             }
         }
         
@@ -182,11 +194,11 @@ void loop() {
             voc_TVOC_ave = myVOC.get_TVOC_ave();
             finished_voc = true;
         } else {
-            voc_eCO2_ave = -1;
-            voc_TVOC_ave = -1;
+            voc_eCO2_ave = -1.0;
+            voc_TVOC_ave = -1.0;
         }
 
-        co2_ave = myCO2.get_co2_ave();
+        co2_ave = myCO2.get_co2_ave_calibrated();
         
         if(finished_mrt_ot && finished_voc) {
             finished_other_sensors = true;
@@ -203,7 +215,7 @@ void loop() {
 
         if(publish_data) {
             char data[1000];
-            sprintf(data,"{ \"Mean Radiant Temperature\": \"%3.2f\", \"Operating Temperature\": \"%3.2f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%4.2f\", \"TVOC\": \"%4.2f\",\"PM 2_5\": \"%i\", \"Air Temperature\": \"%3.2f\",\"Relative Humidity of Air\": \"%3.2f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
+            sprintf(data,"{ \"Mean Radiant Temperature\": \"%3.2f\", \"Operating Temperature\": \"%3.2f\", \"CO2 Concentration\": \"%i\", \"eCO2\": \"%4.2f\", \"TVOC\": \"%4.2f\",\"PM 2_5\": \"%f\", \"Air Temperature\": \"%3.2f\",\"Relative Humidity of Air\": \"%3.2f\"}" , T_mrt, T_ot, co2_ave, voc_eCO2_ave, voc_TVOC_ave, pm_ave, T_a, sht_rh_ave);
             Serial.println("------------------------");
             Serial.print("Data:");
             Serial.println(data);
