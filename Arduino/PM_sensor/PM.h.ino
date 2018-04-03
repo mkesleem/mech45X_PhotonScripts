@@ -41,8 +41,13 @@ private:
     
     bool debug = false;
     
-    int pm_avgpm2_5;
-    int pm2_5_buf[MAX_READ_COUNT];
+    float pm_avgpm2_5;
+    float pm_avgpm1_75;
+    float pm_avgpm0_75;
+    float pm_avgpm0_4;
+    float pm1_75_buf[MAX_READ_COUNT];
+    float pm0_75_buf[MAX_READ_COUNT];
+    float pm0_4_buf[MAX_READ_COUNT];
     
     bool done_reading;
     int read_count;

@@ -238,11 +238,18 @@ void PM_7003::read_sensor(void) {
     if (read_count > MAX_READ_COUNT) {
         pm_avgpm2_5 = 0;
         
-        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm2_5 += pm2_5_buf[k];}
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm1_75 += pm1_75_buf[k];}
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_75 += pm0_75_buf[k];}
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_4 += pm0_4_buf[k];}
+        float pm_avg04_f = 3668*exp(-2.265*pow(10,-6) * (pm_avgpm0_4/MAX_READ_COUNT)) + 25.63*exp(0.0001089*(pm_avgpm0_4/MAX_READ_COUNT));
+        float pm_avg075_f = 329.9*exp(5.122*pow(10,-5) * (pm_avgpm0_75/MAX_READ_COUNT)) + 21.26*exp(0.0002764*(pm_avgpm0_75/MAX_READ_COUNT));
+        float pm_avg175_f = 1.941*pow(10,-12)*pow((pm_avgpm0_75/MAX_READ_COUNT),4) +-2.409*pow(10,-8)*pow((pm_avgpm0_75/MAX_READ_COUNT),3) + 0.0001295*pow((pm_avgpm0_75/MAX_READ_COUNT),2)+ -0.02592*(pm_avgpm0_75/MAX_READ_COUNT)+ 30.16;
+        float pm_avg_fvol = pm_avg04_f*4/3*3.14159265359*pow((400/2*pow(10,-9)),3)+pm_avg075_f*4/3*3.14159265359*pow((750/2*pow(10,-9)),3)+pm_avg175_f*4/3*3.14159265359*pow((1750/2*pow(10,-9)),3);
+        float pm_avg_fmass = pm_avg_fvol*1.65*pow(100,3)*10*1000*1000000;
         
-        float pm_avg_f = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
-        int pm_avg_i = static_cast<int>(pm_avg_f);
-        pm_avgpm2_5 = pm_avg_i;
+        
+        int pm_avg_i = static_cast<int>(pm_avg_fmass);
+        pm_avgpm2_5 = pm_avg_fmass;
         done_reading = true;
         
     }
@@ -327,9 +334,15 @@ void PM_7003::print_messages(void){
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
         
-    float pm2_5_f = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
-    int pm_2_5_i = static_cast<int>(pm2_5_f);
-    pm2_5_buf[read_count-1] = pm_2_5_i;
+    float pm0_4_f = packetdata.countPM0_3um - packetdata.countPM0_5um;
+    float pm0_75_f = packetdata.countPM0_5um - packetdata.countPM1_0um;
+    float pm1_75_f = packetdata.countPM1_0um - packetdata.countPM2_5um;
+    int pm_1_75_i = static_cast<int>(pm1_75_f);
+    int pm_0_75_i = static_cast<int>(pm0_75_f);
+    int pm_0_4_i = static_cast<int>(pm0_4_f);
+    pm1_75_buf[read_count-1] = pm1_75_f;
+    pm0_75_buf[read_count-1] = pm0_75_f;
+    pm0_4_buf[read_count-1] = pm0_4_f;
 
     if(debug) {
         Serial.println(print_buffer);
@@ -338,7 +351,7 @@ void PM_7003::print_messages(void){
     Serial.print("PM 2.5 Reading #");
     Serial.print(read_count);
     Serial.print(": ");
-    Serial.println(pm2_5_buf[read_count-1]);
+    Serial.println(pm1_75_buf[read_count-1]);
 }
 
 int PM_7003::get_pm_ave(void) {
