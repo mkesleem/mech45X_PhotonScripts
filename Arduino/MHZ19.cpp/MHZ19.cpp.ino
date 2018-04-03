@@ -19,7 +19,7 @@ void MHZ19::set_transistor(int pin) {
 }
 
 void MHZ19::begin_timer(void) {
-    co2_ppm_average = -1;
+    co2_ppm_average_uncalibrated = -1;
     digitalWrite(co2_transistor_control, HIGH);
     start_time = now();
     Serial.println("--------------");
@@ -96,7 +96,7 @@ bool MHZ19::run_sensor(void) {
      * calculate average value
      */
     co2_ppm = -1;
-    co2_ppm_average = 0;
+    co2_ppm_average_uncalibrated = 0;
     is_average_taken = false;
     does_sensor_work = true;
     reading_count = 1;
@@ -149,12 +149,15 @@ void MHZ19::calculate_average_reading(void) {
      * THEN calculate the average
      */
     if(reading_count > NUMBER_OF_VALUES) {
-        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
+        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average_uncalibrated += mhz19_buffer[k];}
       
-        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES );
-      
+        co2_ppm_average_uncalibrated = co2_ppm_average_uncalibrated / ( NUMBER_OF_VALUES );
         is_average_taken = true;
     }
+}
+
+void MHZ19::apply_calibration_curve(void) {
+    co2_ppm_average_calibrated = calib_a0 + co2_ppm_average_uncalibrated * calib_a1;
 }
 
 void MHZ19::print_average_reading(void) {
@@ -162,10 +165,13 @@ void MHZ19::print_average_reading(void) {
      * IF the average has been taken (co2_ppm_average > 0)
      * THEN print the average
      */
-    if(co2_ppm_average > 0) {
+    if(co2_ppm_average_uncalibrated > 0) {
         Serial.println("-----------------------------");
-        Serial.print("CO2 PPM Average Reading: ");
-        Serial.println(co2_ppm_average);
+        Serial.print("CO2 PPM Average Reading (Uncalibrated): ");
+        Serial.println(co2_ppm_average_uncalibrated);
+        apply_calibration_curve();
+        Serial.print("CO2 PPM Average Reading (Calibrated): ");
+        Serial.println(co2_ppm_average_calibrated);
         Serial.println("-----------------------------");
     }
 }
@@ -265,6 +271,11 @@ void MHZ19::fill_frame_buffer(void) {
 }
 
 // getter functions
-int MHZ19::get_co2_ave(void) {return co2_ppm_average;}
+int MHZ19::get_co2_ave_uncalibrated(void) {return co2_ppm_average_uncalibrated;}
+int MHZ19::get_co2_ave_calibrated(void) {return co2_ppm_average_calibrated;}
 int MHZ19::get_co2_reading(void) {return co2_ppm;}
-void MHZ19::reset_co2_ave(void) {co2_ppm_average = -1;}
+void MHZ19::reset_co2_ave(void) {
+    co2_ppm_average_uncalibrated = -1;
+    co2_ppm_average_calibrated = -1;
+}
+

@@ -16,7 +16,8 @@ class MHZ19 {
         MHZ19();
         virtual ~MHZ19();
         int get_co2_reading(void);
-        int get_co2_ave(void);
+        int get_co2_ave_uncalibrated(void);
+        int get_co2_ave_calibrated(void);
         void set_transistor(int pin);
         bool make_sensor_read(void);
         void calibrate_sensor(void);
@@ -25,7 +26,9 @@ class MHZ19 {
     private:
         char frame_buffer[MAX_FRAME_LEN];
         const uint8_t mhz19_read_command[MAX_FRAME_LEN] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};;
-        
+        const int calib_a0 = -337.9817189;
+        const int calib_a1 = 0.874556151;
+        void apply_calibration_curve(void);
         bool debug = false;
         
         bool sync_state;
@@ -40,7 +43,8 @@ class MHZ19 {
         int current_byte;
         int drain;
         int co2_ppm;
-        int co2_ppm_average;
+        int co2_ppm_average_uncalibrated;
+        int co2_ppm_average_calibrated;
         int reading_count;
         int function_call_count;
         int mhz19_buffer[NUMBER_OF_VALUES];
