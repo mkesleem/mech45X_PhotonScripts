@@ -4,20 +4,112 @@
  */
 
 #include "MHZ19.h"
+#include "Time.h"
 
 MHZ19::MHZ19() {
+    first_time = true;
 }
 
 MHZ19::~MHZ19() {
 }
 
-bool MHZ19::start_sensor(void) {
+void MHZ19::set_transistor(int pin) {
     /*
-     * Start sequence for MHZ19
-     * returns true if sensor on, false if sensor off
-     * uses run_sensor() function
-     */
-    return (run_sensor());
+	 * Set transistor pin
+	 * set pinMode for transistor pin
+	 */
+	co2_transistor_control = pin;
+    pinMode(co2_transistor_control,OUTPUT);
+}
+
+void MHZ19::begin_timer(void) {
+    /*
+	 * Turn transistor on
+	 * Save time at which transistor is turned on
+	 * Time is used for timing purposes
+	 * change first_time to false
+	 *
+	 * first_time indicates whether or not timer has been started
+	 * and transistor has been turned on
+	 */
+	co2_ppm_average = -1;
+    digitalWrite(co2_transistor_control, HIGH);
+    start_time = now();
+    Serial.println("--------------");
+    Serial.print("CO2 start time: ");
+    Serial.println(start_time);
+    Serial.println("--------------");
+    first_time = false;
+}
+
+bool MHZ19::check_begin_reading(void) {
+    /*
+	 * Check whether enough time has passed to begin reading
+	 * return true if enough time has passed
+	 * else false
+	 */
+	current_time = now();
+    duration = current_time - start_time;
+    Serial.println("-----------------");
+    Serial.print("CO2 Duration: ");
+    Serial.println(duration);
+    Serial.println("-----------------");
+    
+    if(duration >= CO2_START_UP_TIME) {
+        Serial.println("Three minutes have elapsed since starting CO2 sensor!");
+        return(true);
+    } else{return(false);}
+}
+
+bool MHZ19::make_sensor_read(void) {
+    /*
+	 * turn transistor on and start timer if this hasn't already been done
+	 * read from sensor if enough time has passed
+	 * return true if enough measurements have been taken
+	 * else false
+	 */
+	if(first_time) {
+        function_call_count = 0;
+        begin_timer();
+        return(false);
+    }
+    else if(function_call_count < MAX_FUNCTION_CALL_COUNT) {
+        if(check_begin_reading()) {
+            Serial.println("---------------------");
+            Serial.print("Function Call Count: ");
+            Serial.println(function_call_count);
+            Serial.println("---------------------");
+            run_sensor();
+            function_call_count ++;
+        } else {return(false);}
+    }
+    
+    
+    if(function_call_count >= MAX_FUNCTION_CALL_COUNT) {
+        first_time = true;
+        digitalWrite(co2_transistor_control, LOW);
+        return(true);
+    } else{return(false);}
+}
+
+void MHZ19::calibrate_sensor(void) {
+    /*
+	 * Turn sensor on and wait for warm-upper_bound
+	 * Following warm-up, read forever
+	 */
+	if(first_time) {
+        function_call_count = 0;
+        begin_timer();
+    }
+
+    if(check_begin_reading()) {
+        Serial.println("---------------------");
+        Serial.print("Function Call Count: ");
+        Serial.println(function_call_count);
+        Serial.println("---------------------");
+        run_sensor();
+        function_call_count ++;
+    }
 }
 
 bool MHZ19::run_sensor(void) {
@@ -38,7 +130,6 @@ bool MHZ19::run_sensor(void) {
     reading_count = 1;
 
     serial_drain();
-    start_countdown(STARTUP_TIME);
     
     while(is_average_taken == false && does_sensor_work == true) {
         memset(frame_buffer, 0, 9);
@@ -49,22 +140,8 @@ bool MHZ19::run_sensor(void) {
         print_average_reading();
         co2_ppm = -1;
     }
-    if(is_average_taken == true) {
-        return(true);
-    } else {return(false);}
-}
-
-void MHZ19::start_countdown(int start_time) {
-    /*
-     * Countdown so that users can visualize how long before the sensor starts
-     */
-    while(start_time > 0) {
-        Serial.print("Starting CO2 Sensor in: ");
-        Serial.print(start_time);
-        Serial.println("s");
-        delay(1000);
-        start_time = start_time - 1;
-    }
+    if(is_average_taken == true) {return(true);}
+    else {return(false);}
 }
 
 void MHZ19::print_current_reading(void) {
@@ -72,17 +149,11 @@ void MHZ19::print_current_reading(void) {
      * Prints current reading if reading is valid (i.e. co2_ppm > 0)
      * and if the maximum number of readings haven't been exceeded
      */
-    if(co2_ppm > 0 && reading_count > DISCARD_VALUES) {
+    if(co2_ppm > 0) {
       Serial.print("MHZ19 CO2 PPM Reading ");
       Serial.print(reading_count);
       Serial.print(": ");
       Serial.println(co2_ppm);
-    }
-    else if(co2_ppm > 0 && reading_count <= DISCARD_VALUES) {
-        Serial.print("DISCARD - MHZ19 CO2 PPM Reading ");
-        Serial.print(reading_count);
-        Serial.print(": ");
-        Serial.println(co2_ppm);
     }
     else {
       Serial.println("Error reading CO2 PPM from MHZ19");
@@ -106,9 +177,9 @@ void MHZ19::calculate_average_reading(void) {
      * THEN calculate the average
      */
     if(reading_count > NUMBER_OF_VALUES) {
-        for(int k = DISCARD_VALUES; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
+        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
       
-        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES - DISCARD_VALUES );
+        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES );
       
         is_average_taken = true;
     }
@@ -120,8 +191,10 @@ void MHZ19::print_average_reading(void) {
      * THEN print the average
      */
     if(co2_ppm_average > 0) {
+        Serial.println("-----------------------------");
         Serial.print("CO2 PPM Average Reading: ");
         Serial.println(co2_ppm_average);
+        Serial.println("-----------------------------");
     }
 }
 
@@ -182,14 +255,23 @@ void MHZ19::frame_sync(void) {
             frame_sync_count = 2;
         }
         else {
-            Serial.print("-- Frame syncing... ");
-            Serial.println(current_byte, HEX);
+            if(debug) {
+                Serial.print("-- Frame syncing... ");
+                Serial.println(current_byte, HEX);   
+            }
+            
             frame_read_count ++;
         }
 
         if (!sync_state && !(Serial1.available() > 0) && frame_read_count < MAX_FRAME_READ_COUNT) {
             Serial1.write(mhz19_read_command, 9);
-            Serial.println("Read command has been sent to CO2 sensor");
+            
+            if(debug) {
+                Serial.println("----------------------------------------");
+                Serial.println("Read command has been sent to CO2 sensor");
+                Serial.println("----------------------------------------");
+            }
+            
             delay(500);
         }        
     }
@@ -210,6 +292,15 @@ void MHZ19::fill_frame_buffer(void) {
     }
 }
 
-// getter functions
-int MHZ19::get_co2_ave(void) {return co2_ppm_average;}
-int MHZ19::get_co2_reading(void) {return co2_ppm;}
+// getter and setter functions
+int MHZ19::get_co2_ave(void) {
+	return co2_ppm_average;
+}
+
+int MHZ19::get_co2_reading(void) {
+	return co2_ppm;
+}
+
+void MHZ19::reset_co2_ave(void) {
+	co2_ppm_average = -1;
+}

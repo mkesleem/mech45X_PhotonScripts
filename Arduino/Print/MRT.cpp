@@ -59,13 +59,16 @@ float ClosedCube_Si7051::readTemperature() {
     return (175.72*val) / 65536 - 46.85;
 }
 
-/*
- * Part 2: Si7051 MECH 45X Team 26 library
- */
+//*********************************************************//
+// Part 2: Si7051 MECH 45X Team 26 library                 //
+// The following code was written by MECH 45X Team 26      //
+// It is properly commented                                //
+//*********************************************************//
+
 
 bool ClosedCube_Si7051::start_mrt(void) {
     /*
-     * Start globe thermometer sensor
+     * Start MRT sensor
      * 
      * The code will read a value of 128 or greater
      * if the sensor is broken or disconnected
@@ -76,48 +79,71 @@ bool ClosedCube_Si7051::start_mrt(void) {
      * If the value is less than 128, it returns true
      * (sensor works)
      * 
-     * The code retrieved from the on line library should be improved
+     * The code retrieved from the online library should be improved
      * to fix this.
      */
     begin(ADDR_MRT);
     delay(500);
-    if(run_mrt() > DEFAULT_AVERAGE) {
-        Serial.println("Failed to start MRT sensor!");
-        return false;
-    } else {
-        Serial.println("Successfully started MRT sensor!");
-        return true;
-    }
+    return(run_mrt());
 }
 
-float ClosedCube_Si7051::run_mrt(void) {
+bool ClosedCube_Si7051::run_mrt(void) {
     /*
-     * Takes globe thermometer measurements until read_count
-     * is exceeded.
-     * Once read_count is exceeded, the average is taken.
+     * Takes MRT measurements until read_count is exceeded
+     * once read_count is exceeded, the average is taken
      */
     read_count = 1;
+    error_count = 1;
     
-    while(read_count <= MAX_READ_COUNT) {
-        T_buf[read_count - 1] = readTemperature();
-        Serial.print("Reading #");
-        Serial.print(read_count);
-        Serial.print(": Tg is: ");
-        Serial.println(T_buf[read_count - 1]);
-        read_count ++;
-        delay(250);
+    while(read_count <= MAX_READ_COUNT && error_count <= MAX_ERROR_COUNT) {
+        float current_T = readTemperature();
+        
+        if(current_T >= DEFAULT_AVERAGE) {
+            Serial.println("------------------------------------------------");
+            Serial.print("Error reading from Globe Thermometer, Tg: ");
+            Serial.println(current_T);
+            Serial.println("------------------------------------------------");
+            error_count ++;
+            delay(1000);
+        } else{
+            T_buf[read_count - 1] = readTemperature();
+            Serial.print("Globe Thermometer Reading #");
+            Serial.print(read_count);
+            Serial.print(": Tg is: ");
+            Serial.println(T_buf[read_count - 1]);
+            read_count ++;
+            error_count = 1;
+            delay(250);
+        }
     }
+    
     if(read_count > MAX_READ_COUNT) {
         T_ave = 0;
         for(int k = 0; k < MAX_READ_COUNT; k++) {
             T_ave = T_ave + T_buf[k];
         }
         T_ave = T_ave / MAX_READ_COUNT;
+        Serial.println("--------------------");
         Serial.print("Average Tg is: ");
         Serial.println(T_ave);
-        return(T_ave);
+        Serial.println("--------------------");
+        return(true);
     }
+    else if(error_count > MAX_ERROR_COUNT) {
+        T_ave = -1;
+        Serial.println("--------------------------------------------------------------");
+        Serial.println("Error reading from Globe Thermometer, no average Tg calculated");
+        Serial.println("--------------------------------------------------------------");
+        return(false);
+    }
+    else{
+        Serial.println("---------------------------");
+        Serial.println("Failure for no known reason");
+        Serial.println("---------------------------");
+        return(false);}
 }
 
-// Getter function for Globe Thermometer average value
-float ClosedCube_Si7051::get_MRT_ave(void) {return T_ave;}
+// Getter function for Globe Thermometer average temperature
+float ClosedCube_Si7051::get_MRT_ave(void) {
+	return T_ave;
+}

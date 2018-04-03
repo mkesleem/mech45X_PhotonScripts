@@ -2,10 +2,12 @@
  * This is the .h file for the Si7051 sensor
  * This sensor is used in the globe thermometer
  */
+
 #ifndef _CLOSEDCUBE_SI7051_h
 
 #define _CLOSEDCUBE_SI7051_h
 #define MAX_READ_COUNT 5
+#define MAX_ERROR_COUNT 40
 #define ADDR_MRT 0x40
 #define DEFAULT_AVERAGE 128
 #include <Arduino.h>
@@ -15,7 +17,7 @@ public:
     ClosedCube_Si7051();
     
     float readT(); // short-cut for readTemperature
-    float run_mrt(void);
+    bool run_mrt(void);
     bool start_mrt(void);
     float get_MRT_ave(void);
 
@@ -26,7 +28,7 @@ private:
     float T_buf[MAX_READ_COUNT];
     float T_ave;
     int read_count;
+    int error_count;
 };
 
 #endif
-

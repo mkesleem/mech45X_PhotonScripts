@@ -456,11 +456,11 @@ SHT31D ClosedCube_SHT31D::returnError(SHT31D_ErrorCode error) {
     return result;
 }
 
-/*
- * Part 2: Code Written by team 26
- * Team 26 understands this code,
- * therefore it is properly commented.
- */
+//*********************************************************//
+// Part 2: Code Written by team 26                         //
+// Team 26 understands this code                           //
+// Therefore it is properly commented                      //
+//*********************************************************//
 bool ClosedCube_SHT31D::start_sht(void) {
     /*
      * Start sequence for SHT35D
@@ -487,7 +487,7 @@ bool ClosedCube_SHT31D::start_sht(void) {
     }
 }
 
-void ClosedCube_SHT31D::run_sht(void) {
+bool ClosedCube_SHT31D::run_sht(void) {
     /*
      * Run SHT sensor
      * start read_count from 1
@@ -495,8 +495,13 @@ void ClosedCube_SHT31D::run_sht(void) {
      * take reading from sht until enough values are read to take an average
      */
     is_average_taken = false;
+    error_count = 1;
     read_count = 1;
-    while(!is_average_taken) {read_sht();}
+    while(read_count <= MAX_READ_COUNT && error_count <= MAX_ERROR_COUNT) {
+        read_sht();
+    }
+    
+    return(is_average_taken);
 }
 
 SHT31D ClosedCube_SHT31D::read_sht(void) {
@@ -510,7 +515,29 @@ SHT31D ClosedCube_SHT31D::read_sht(void) {
     printResult("Periodic Mode", my_result);
     save_to_buffer(my_result);
     calculate_average();
-    delay(500);
+    delay(250);
+}
+
+SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
+    /*
+     * Prints current reading if no error and not exceeded max count
+     * else print error message
+     */
+    if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT ) {
+        float current_t = result.t;
+        float current_rh = result.rh;
+        
+        if(current_t > 0 && current_rh > 0) {
+            //Serial.print(text);
+            Serial.print("SHT Reading #");
+            Serial.print(read_count);
+            Serial.print(": T=");
+            Serial.print(current_t);
+            Serial.print("C, RH=");
+            Serial.print(current_rh);
+            Serial.println("%");
+        }
+    }
 }
 
 SHT31D ClosedCube_SHT31D::save_to_buffer(SHT31D result) {
@@ -523,35 +550,25 @@ SHT31D ClosedCube_SHT31D::save_to_buffer(SHT31D result) {
      * else -> report error, do not save any values
      */
     if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
-        t_buf[read_count - 1] = result.t;
-        rh_buf[read_count - 1] = result.rh;
-        read_count++;
-    }
-    else {
+        float current_t = result.t;
+        float current_rh = result.rh;
+        
+        if(current_t > 0 && current_rh > 0) {
+            t_buf[read_count - 1] = current_t;
+            rh_buf[read_count - 1] = current_rh;    
+            read_count++;
+            error_count = 1;
+        } else {
+            Serial.print("SHT Error count: ");
+            Serial.println(error_count);
+            error_count ++;
+        }
+    } else if (result.error != SHT3XD_NO_ERROR) {
         Serial.print("[ERROR] Code #");
         Serial.println(result.error);
-    }
-}
-
-SHT31D ClosedCube_SHT31D::printResult(String text, SHT31D result) {
-    /*
-     * Prints current reading if no error and not exceeded max count
-     * else print error message
-     */
-    if (result.error == SHT3XD_NO_ERROR && read_count <= MAX_READ_COUNT) {
-        Serial.print(text);
-        Serial.print(" Reading #");
-        Serial.print(read_count);
-        Serial.print(": T=");
-        Serial.print(result.t);
-        Serial.print("C, RH=");
-        Serial.print(result.rh);
-        Serial.println("%");
-    }
-    else {
-        Serial.print(text);
-        Serial.print(": [ERROR] Code #");
-        Serial.println(result.error);
+        Serial.print("SHT Error count: ");
+        Serial.println(error_count);
+        error_count ++;
     }
 }
 
@@ -585,7 +602,10 @@ void ClosedCube_SHT31D::calculate_average(void) {
 }
 
 // getter function to get average temperature reading
-float ClosedCube_SHT31D::get_t_ave(void) {return t_average;}
-
+float ClosedCube_SHT31D::get_t_ave(void) {
+	return t_average;
+}
 // getter function to get average relative humidity reading
-float ClosedCube_SHT31D::get_rh_ave(void) {return rh_average;}
+float ClosedCube_SHT31D::get_rh_ave(void) {
+	return rh_average;
+}

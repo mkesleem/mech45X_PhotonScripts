@@ -1,4 +1,4 @@
-\title{MECH 49X\\Dossier 11 - Code}
+\title{MECH 45X\\Dossier 11 - Code}
 \author{Team 26}
 
 \documentclass[12pt,letterpaper,titlepage]{article}
@@ -14,7 +14,21 @@ The code for running for running the sensor package is:
 \begin{verbatim}
 '_all.ino'.
 \end{verbatim}
-This code runs all of the sensors, prints data to Serial connection, and publishes the data to ThingSpeak. The code is presented on the following pages.
+This code runs all of the sensors, prints data to Serial connection, and publishes the data to ThingSpeak. The code is presented on the following pages. The logic to the code is as follows:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+\item Turn on the sensor package
+\item Turn on CO2 sensor
+\item Read from MRT, SHT, and VOC sensors while CO2 sensor warms up (PM sensor is off)
+\item Read from CO2 sensor
+\item Save CO2, MRT, SHT, and VOC average readings
+\item Turn off CO2 sensor and turn on PM sensor
+\item Read from MRT, SHT, and VOC sensors while PM sensor warms up (CO2 sensor is off)
+\item Read from PM sensor and save value
+\item Push CO2, PM, MRT, SHT, and VOC readings to ThingSpeak
+\item Turn off PM sensor and turn on CO2 sensor
+\item Repeat forever
+\end{enumerate}
 \includepdf[pages=-,pagecommand={},width=\textwidth]{_all.pdf}
 % *********************
 % _Calculate MRT and OT
