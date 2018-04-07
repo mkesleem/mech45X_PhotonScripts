@@ -26,8 +26,8 @@ class MHZ19 {
     private:
         char frame_buffer[MAX_FRAME_LEN];
         const uint8_t mhz19_read_command[MAX_FRAME_LEN] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};;
-        const int calib_a0 = -337.9817189;
-        const int calib_a1 = 0.874556151;
+        const float calib_a0 = -337.9817189;
+        const float calib_a1 = 0.874556151;
         void apply_calibration_curve(void);
         bool debug = false;
         
@@ -70,3 +70,4 @@ class MHZ19 {
 };
 
 #endif /* MHZ19_H_ */
+

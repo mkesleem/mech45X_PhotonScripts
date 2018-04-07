@@ -20,6 +20,7 @@ void MHZ19::set_transistor(int pin) {
 
 void MHZ19::begin_timer(void) {
     co2_ppm_average_uncalibrated = -1;
+    co2_ppm_average_calibrated = -1;
     digitalWrite(co2_transistor_control, HIGH);
     start_time = now();
     Serial.println("--------------");
@@ -97,6 +98,7 @@ bool MHZ19::run_sensor(void) {
      */
     co2_ppm = -1;
     co2_ppm_average_uncalibrated = 0;
+    co2_ppm_average_calibrated = 0;
     is_average_taken = false;
     does_sensor_work = true;
     reading_count = 1;
