@@ -237,7 +237,9 @@ void PM_7003::read_sensor(void) {
     
     if (read_count > MAX_READ_COUNT) {
         pm_avgpm2_5 = 0;
-        
+        pm_avgpm1_75 = 0;
+        pm_avgpm0_75 = 0;
+        pm_avgpm0_4 = 0;
         for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm1_75 += pm1_75_buf[k];}
         for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_75 += pm0_75_buf[k];}
         for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_4 += pm0_4_buf[k];}

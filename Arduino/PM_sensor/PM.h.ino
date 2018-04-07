@@ -14,7 +14,7 @@
 #define MAX_READ_COUNT 5
 #define MAX_FRAME_SYNC_COUNT 40
 #define PMS_START_UP_TIME 120
-#define MAX_FUNCTION_CALL_COUNT 1
+#define MAX_FUNCTION_CALL_COUNT 3
 
 class PM_7003 {
 public:
