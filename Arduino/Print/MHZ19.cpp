@@ -15,8 +15,7 @@ MHZ19::~MHZ19() {
 
 void MHZ19::set_transistor(int pin) {
     /*
-	 * Set transistor pin
-	 * set pinMode for transistor pin
+	 * Set pin mode of co2 transistor pin
 	 */
 	co2_transistor_control = pin;
     pinMode(co2_transistor_control,OUTPUT);
@@ -24,15 +23,13 @@ void MHZ19::set_transistor(int pin) {
 
 void MHZ19::begin_timer(void) {
     /*
-	 * Turn transistor on
-	 * Save time at which transistor is turned on
-	 * Time is used for timing purposes
-	 * change first_time to false
-	 *
-	 * first_time indicates whether or not timer has been started
-	 * and transistor has been turned on
+	 * Function to start timer
+	 * Only called if timer has not been started
+	 * Turns CO2 sensor on and starts timer
+	 * Prints start time
 	 */
-	co2_ppm_average = -1;
+	co2_ppm_average_uncalibrated = -1;
+    co2_ppm_average_calibrated = -1;
     digitalWrite(co2_transistor_control, HIGH);
     start_time = now();
     Serial.println("--------------");
@@ -44,9 +41,10 @@ void MHZ19::begin_timer(void) {
 
 bool MHZ19::check_begin_reading(void) {
     /*
-	 * Check whether enough time has passed to begin reading
-	 * return true if enough time has passed
-	 * else false
+	 * Check if sensor has been on long enough to start reading
+	 * Print how long the sensor has been on
+	 * Return true if sensor is on long enough
+	 * else return false
 	 */
 	current_time = now();
     duration = current_time - start_time;
@@ -63,10 +61,18 @@ bool MHZ19::check_begin_reading(void) {
 
 bool MHZ19::make_sensor_read(void) {
     /*
-	 * turn transistor on and start timer if this hasn't already been done
-	 * read from sensor if enough time has passed
-	 * return true if enough measurements have been taken
-	 * else false
+	 * Method to make CO2 sensor read
+	 * Sensor turns off every time enough readings have been taken
+	 * Sensor turns back on again to take more readings
+	 *
+	 * IF sensor off (first_time == true), call begin_timer()
+	 * ELSE IF not enough readings have been taken
+	 * 		IF sensor on long enough, take a reading
+	 * 		ELSE return false
+	 * IF enough readings have been taken
+	 * 		turn sensor off, first_time = true
+	 * 		return true
+	 * ELSE return false
 	 */
 	if(first_time) {
         function_call_count = 0;
@@ -94,8 +100,9 @@ bool MHZ19::make_sensor_read(void) {
 
 void MHZ19::calibrate_sensor(void) {
     /*
-	 * Turn sensor on and wait for warm-upper_bound
-	 * Following warm-up, read forever
+	 * Method to make CO2 sensor read without turning off
+	 * Turn sensor on and wait until it warms upper_bound
+	 * Take sensor readings forever	 
 	 */
 	if(first_time) {
         function_call_count = 0;
@@ -124,7 +131,8 @@ bool MHZ19::run_sensor(void) {
      * calculate average value
      */
     co2_ppm = -1;
-    co2_ppm_average = 0;
+    co2_ppm_average_uncalibrated = 0;
+    co2_ppm_average_calibrated = 0;
     is_average_taken = false;
     does_sensor_work = true;
     reading_count = 1;
@@ -177,12 +185,19 @@ void MHZ19::calculate_average_reading(void) {
      * THEN calculate the average
      */
     if(reading_count > NUMBER_OF_VALUES) {
-        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average += mhz19_buffer[k];}
+        for(int k = 0; k < NUMBER_OF_VALUES; k++) {co2_ppm_average_uncalibrated += mhz19_buffer[k];}
       
-        co2_ppm_average = co2_ppm_average / ( NUMBER_OF_VALUES );
-      
+        co2_ppm_average_uncalibrated = co2_ppm_average_uncalibrated / ( NUMBER_OF_VALUES );
         is_average_taken = true;
     }
+}
+
+void MHZ19::apply_calibration_curve(void) {
+    /*
+	 * Method to apply calibration curve
+	 * calibrated_value = a0 + uncalibrated_value * a1
+	 */
+	co2_ppm_average_calibrated = calib_a0 + co2_ppm_average_uncalibrated * calib_a1;
 }
 
 void MHZ19::print_average_reading(void) {
@@ -190,10 +205,13 @@ void MHZ19::print_average_reading(void) {
      * IF the average has been taken (co2_ppm_average > 0)
      * THEN print the average
      */
-    if(co2_ppm_average > 0) {
+    if(co2_ppm_average_uncalibrated > 0) {
         Serial.println("-----------------------------");
-        Serial.print("CO2 PPM Average Reading: ");
-        Serial.println(co2_ppm_average);
+        Serial.print("CO2 PPM Average Reading (Uncalibrated): ");
+        Serial.println(co2_ppm_average_uncalibrated);
+        apply_calibration_curve();
+        Serial.print("CO2 PPM Average Reading (Calibrated): ");
+        Serial.println(co2_ppm_average_calibrated);
         Serial.println("-----------------------------");
     }
 }
@@ -292,9 +310,13 @@ void MHZ19::fill_frame_buffer(void) {
     }
 }
 
-// getter and setter functions
-int MHZ19::get_co2_ave(void) {
-	return co2_ppm_average;
+// getter functions
+int MHZ19::get_co2_ave_uncalibrated(void) {
+	return co2_ppm_average_uncalibrated;
+}
+
+int MHZ19::get_co2_ave_calibrated(void) {
+	return co2_ppm_average_calibrated;
 }
 
 int MHZ19::get_co2_reading(void) {
@@ -302,5 +324,6 @@ int MHZ19::get_co2_reading(void) {
 }
 
 void MHZ19::reset_co2_ave(void) {
-	co2_ppm_average = -1;
+    co2_ppm_average_uncalibrated = -1;
+    co2_ppm_average_calibrated = -1;
 }

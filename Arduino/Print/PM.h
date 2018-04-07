@@ -2,7 +2,6 @@
  * This is the .h file for the PMS7003 sensor
  * This code was written exclusively by MECH 45X Team 26
  */
- 
 #include <stdint.h>
 #include "WProgram.h"
 #include "Time.h"
@@ -19,13 +18,13 @@
 #define MAX_READ_COUNT 5
 #define MAX_FRAME_SYNC_COUNT 40
 #define PMS_START_UP_TIME 120
-#define MAX_FUNCTION_CALL_COUNT 1
+#define MAX_FUNCTION_CALL_COUNT 3
 
 class PM_7003 {
 public:
     PM_7003();
     virtual ~PM_7003();
-    int get_pm_ave(void);
+    float get_pm_ave(void);
     void set_transistor(int ground_pin, int tx_pin);
     bool make_sensor_read(void);
     void calibrate_sensor(void);
@@ -46,8 +45,13 @@ private:
     
     bool debug = false;
     
-    int pm_avgpm2_5;
-    int pm2_5_buf[MAX_READ_COUNT];
+    float pm_avgpm2_5;
+    float pm_avgpm1_75;
+    float pm_avgpm0_75;
+    float pm_avgpm0_4;
+    float pm1_75_buf[MAX_READ_COUNT];
+    float pm0_75_buf[MAX_READ_COUNT];
+    float pm0_4_buf[MAX_READ_COUNT];
     
     bool done_reading;
     int read_count;

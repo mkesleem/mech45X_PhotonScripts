@@ -2,14 +2,8 @@
  * This is the .cpp file for the PMS7003 sensor
  * This code was written exclusively by MECH 45X Team 26
  */
-#include "PM.h"
-#include "Time.h"
-
 PM_7003::PM_7003() {
-    /*
-	 * Initialize object
-	 */
-	current_byte = 0;
+    current_byte = 0;
     packetdata.frame_length = MAX_FRAME_LENGTH;
     frame_length = MAX_FRAME_LENGTH;
     first_time = true;
@@ -22,7 +16,7 @@ PM_7003::~PM_7003() {
 void PM_7003::set_transistor(int ground_pin, int tx_pin) {
     /*
      * Set transistor and set pin mode for transistors
-     * tx_pin turns Tx transistor on and off
+     * tx_pin turns tx transistor on and off
      * ground_pin turns power to sensor on and off (transistor goes to goround)
      */
     pm_ground_control = ground_pin;
@@ -34,7 +28,7 @@ void PM_7003::set_transistor(int ground_pin, int tx_pin) {
 void PM_7003::begin_timer(void) {
     /* 
      * Turn sensor on and start timer
-     * Time how long sensor has been on
+     * (time how long sensor has been on)
      */
     digitalWrite(pm_ground_control, HIGH);
     digitalWrite(pm_tx_control, HIGH);
@@ -244,14 +238,20 @@ void PM_7003::read_sensor(void) {
     
     if (read_count > MAX_READ_COUNT) {
         pm_avgpm2_5 = 0;
-        
-        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm2_5 += pm2_5_buf[k];}
-        
-        float pm_avg_f = exp((pm_avgpm2_5/MAX_READ_COUNT + 109314)/15990)*10000;
-        int pm_avg_i = static_cast<int>(pm_avg_f);
-        pm_avgpm2_5 = pm_avg_i;
+        pm_avgpm1_75 = 0;
+        pm_avgpm0_75 = 0;
+        pm_avgpm0_4 = 0;
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm1_75 += pm1_75_buf[k];}
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_75 += pm0_75_buf[k];}
+        for(int k = 0; k < MAX_READ_COUNT; k++) {pm_avgpm0_4 += pm0_4_buf[k];}
+        float pm_avg04_f = 3668*exp(-2.265*pow(10,-6) * (pm_avgpm0_4/MAX_READ_COUNT)) + 25.63*exp(0.0001089*(pm_avgpm0_4/MAX_READ_COUNT));
+        float pm_avg075_f = 329.9*exp(5.122*pow(10,-5) * (pm_avgpm0_75/MAX_READ_COUNT)) + 21.26*exp(0.0002764*(pm_avgpm0_75/MAX_READ_COUNT));
+        float pm_avg175_f = 1.941*pow(10,-12)*pow((pm_avgpm0_75/MAX_READ_COUNT),4) +-2.409*pow(10,-8)*pow((pm_avgpm0_75/MAX_READ_COUNT),3) + 0.0001295*pow((pm_avgpm0_75/MAX_READ_COUNT),2)+ -0.02592*(pm_avgpm0_75/MAX_READ_COUNT)+ 30.16;
+        float pm_avg_fvol = pm_avg04_f*4/3*3.14159265359*pow((400/2*pow(10,-9)),3)+pm_avg075_f*4/3*3.14159265359*pow((750/2*pow(10,-9)),3)+pm_avg175_f*4/3*3.14159265359*pow((1750/2*pow(10,-9)),3);
+        float pm_avg_fmass = pm_avg_fvol*1.65*pow(100,3)*10*1000*1000000;
+                
+        pm_avgpm2_5 = pm_avg_fmass;
         done_reading = true;
-        
     }
 }
 
@@ -334,9 +334,12 @@ void PM_7003::print_messages(void){
     sprintf(print_buffer, "%s%02d, %02d, ", print_buffer,
         packetdata.version, packetdata.error);
         
-    float pm2_5_f = packetdata.countPM1_0um - packetdata.countPM2_5um + packetdata.countPM0_5um - packetdata.countPM1_0um + packetdata.countPM0_3um - packetdata.countPM0_5um;
-    int pm_2_5_i = static_cast<int>(pm2_5_f);
-    pm2_5_buf[read_count-1] = pm_2_5_i;
+    float pm0_4_f = packetdata.countPM0_3um - packetdata.countPM0_5um;
+    float pm0_75_f = packetdata.countPM0_5um - packetdata.countPM1_0um;
+    float pm1_75_f = packetdata.countPM1_0um - packetdata.countPM2_5um;
+    pm1_75_buf[read_count-1] = pm1_75_f;
+    pm0_75_buf[read_count-1] = pm0_75_f;
+    pm0_4_buf[read_count-1] = pm0_4_f;
 
     if(debug) {
         Serial.println(print_buffer);
@@ -345,13 +348,13 @@ void PM_7003::print_messages(void){
     Serial.print("PM 2.5 Reading #");
     Serial.print(read_count);
     Serial.print(": ");
-    Serial.println(pm2_5_buf[read_count-1]);
+    Serial.println(pm1_75_buf[read_count-1]);
 }
 
-int PM_7003::get_pm_ave(void) {
+float PM_7003::get_pm_ave(void) {
     return pm_avgpm2_5;
 }
 
 void PM_7003::reset_pm_ave(void) {
-    pm_avgpm2_5 = -1;
+    pm_avgpm2_5 = -1.0;
 }
